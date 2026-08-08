@@ -8,7 +8,7 @@
 let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.services.ghostfolio;
-  hllib = inputs.homelab.lib;
+  hllib = inputs.shared.lib;
   nodejs = pkgs.nodejs_24;
   ghostbudget = pkgs.buildNpmPackage rec {
     inherit nodejs;

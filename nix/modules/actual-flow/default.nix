@@ -8,8 +8,8 @@
 let
   ccfg = config.homelab.cluster;
   cfg = config.homelab.services.actualbudget;
-  hllib = inputs.homelab.lib;
-  container-utils = inputs.homelab.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
+  hllib = inputs.shared.lib;
+  container-utils = inputs.shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   nodejs = pkgs.nodejs_24;
   actual-flow = pkgs.buildNpmPackage rec {
     inherit nodejs;
@@ -124,7 +124,7 @@ in
   };
   imports = [
     inputs.setup-secrets.nixosModules.default
-    inputs.homelab.nixosModules.kubetree-service-macros
+    inputs.shared.nixosModules.kubetree-service-macros
   ];
   config = lib.mkIf (cfg.enable && cfg.importSchedule != null) {
     setup-secrets = {
