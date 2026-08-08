@@ -124,7 +124,7 @@ in
   };
   imports = [
     inputs.setup-secrets.nixosModules.default
-    inputs.shared.nixosModules.kubetree-service-macros
+    inputs.shared.nixosModules.service-macros
   ];
   config = lib.mkIf (cfg.enable && cfg.importSchedule != null) {
     setup-secrets = {
