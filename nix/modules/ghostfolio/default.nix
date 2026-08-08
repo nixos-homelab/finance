@@ -7,7 +7,7 @@
 }:
 let
   cfg = config.homelab.services.ghostfolio;
-  hllib = inputs.shared.lib;
+  hllib = inputs.homelab-shared.lib;
 in
 {
   options.homelab.services.ghostfolio = {
@@ -15,8 +15,8 @@ in
   };
   imports = [
     inputs.setup-secrets.nixosModules.default
-    inputs.shared.nixosModules.postgresql
-    inputs.shared.nixosModules.redis
+    inputs.homelab-shared.nixosModules.postgresql
+    inputs.homelab-shared.nixosModules.redis
   ]
   ++ self.lib.importsApply [ ./homepage.nix ];
   # TODO: Add tini

@@ -7,8 +7,8 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  hllib = inputs.shared.lib;
-  container-utils = inputs.shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
+  hllib = inputs.homelab-shared.lib;
+  container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   refreshGhostfolioAPIToken = pkgs.writeShellScriptBin "refresh-ghostfolio-api-token.sh" ''
     set -eo pipefail
     GHOSTFOLIO_API_TOKEN=$(curl -sX POST http://ghostfolio.ghostfolio:3333/api/v1/auth/anonymous \
@@ -31,7 +31,7 @@ in
   };
   imports = [
     inputs.setup-secrets.nixosModules.default
-    inputs.shared.nixosModules.homepage
+    inputs.homelab-shared.nixosModules.homepage
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [
