@@ -234,7 +234,7 @@ in
             };
             volumesByName = {
               config.configMap.name = "actual-flow";
-              config-tmp.emptyDir = { };
+              config-tmp.emptyDir.medium = "Memory";
               data.persistentVolumeClaim.claimName = "actual-flow";
             };
           };
