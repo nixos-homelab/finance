@@ -38,7 +38,7 @@ in
       {
         logPrefix = "Homepage (GHOSTFOLIO_TOKEN)";
         requires = [ "GHOSTFOLIO_TOKEN" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage ghostfolio-token GHOSTFOLIO_TOKEN "$GHOSTFOLIO_TOKEN"'';
+        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage ghostfolio-token GHOSTFOLIO_TOKEN "''${GHOSTFOLIO_TOKEN:?}"'';
       }
     ];
     homelab.services.homepage = {

@@ -107,7 +107,7 @@ in
           {
             logPrefix = "Ghostbudget (GHOSTFOLIO_TOKEN)";
             requires = [ "GHOSTFOLIO_TOKEN" ];
-            cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret ghostfolio ghostfolio-token GHOSTFOLIO_TOKEN "$GHOSTFOLIO_TOKEN"'';
+            cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret ghostfolio ghostfolio-token GHOSTFOLIO_TOKEN "''${GHOSTFOLIO_TOKEN:?}"'';
           }
         ];
         kubetree.resources.ghostbudget = {
