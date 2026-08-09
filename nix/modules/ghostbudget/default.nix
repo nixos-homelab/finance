@@ -147,48 +147,44 @@ in
         };
       };
       sync-accounts = {
-        apiVersion = "batch/v1";
-        kind = "CronJob";
+        apiVersion = "cluster.local";
+        kind = "CronJobMacro";
         metadata.namespace = "ghostfolio";
         metadata.name = "sync-accounts";
         metadata.labels."app.kubernetes.io/name" = "ghostbudget";
         spec.schedule = cfg.importSchedule;
-        spec.jobTemplate.spec.template = {
-          metadata.labels = {
-            "app.kubernetes.io/name" = "ghostbudget";
-            "cluster.local/ghostfolio-egress" = "allow";
-            "cluster.local/actualbudget-egress" = "allow";
-          };
-          podSpecMacro = {
-            name = "ghostbudget";
-            restartPolicy = "OnFailure";
-            mainContainer = {
-              image = "${ghostbudgetImage.buildArgs.name}:${ghostbudgetImage.imageTag}";
-              imagePullPolicy = "Never";
-              args = [ "import" ];
-              envByName.ACTUAL_BUDGET_URL = "http://actualbudget.actualbudget:5006";
-              envByName.ACTUAL_BUDGET_PASS = "actual";
-              envByName.ACTUAL_BUDGET_SYNC_ID = cfg.actualBudgetSyncId;
-              # Not the actual Actual Budget data dir, this is just for the api library
-              envByName.ACTUAL_BUDGET_DATA_DIR = "/data";
-              envByName.GHOSTFOLIO_URL = "http://ghostfolio.ghostfolio:3333";
-              envByName.GHOSTFOLIO_TOKEN.valueFrom.secretKeyRef = {
-                name = "ghostfolio-token";
-                key = "GHOSTFOLIO_TOKEN";
-              };
-              volumeMountsByPath = {
-                "/config.json" = {
-                  name = "config";
-                  subPath = "config.json";
-                };
-                "/data" = "data";
-                "/logs" = "log";
-              };
+        spec.allowEgress = [
+          "ghostfolio"
+          "actualbudget"
+        ];
+        spec.podSpecMacro = {
+          name = "ghostbudget";
+          mainContainer = {
+            image = "${ghostbudgetImage.buildArgs.name}:${ghostbudgetImage.imageTag}";
+            imagePullPolicy = "Never";
+            args = [ "import" ];
+            envByName.ACTUAL_BUDGET_URL = "http://actualbudget.actualbudget:5006";
+            envByName.ACTUAL_BUDGET_PASS = "actual";
+            envByName.ACTUAL_BUDGET_SYNC_ID = cfg.actualBudgetSyncId;
+            # Not the actual Actual Budget data dir, this is just for the api library
+            envByName.ACTUAL_BUDGET_DATA_DIR = "/data";
+            envByName.GHOSTFOLIO_URL = "http://ghostfolio.ghostfolio:3333";
+            envByName.GHOSTFOLIO_TOKEN.valueFrom.secretKeyRef = {
+              name = "ghostfolio-token";
+              key = "GHOSTFOLIO_TOKEN";
             };
-            volumesByName.config.configMap.name = "ghostbudget";
-            volumesByName.data.persistentVolumeClaim.claimName = "ghostbudget";
-            volumesByName.log.emptyDir = { };
+            volumeMountsByPath = {
+              "/config.json" = {
+                name = "config";
+                subPath = "config.json";
+              };
+              "/data" = "data";
+              "/logs" = "log";
+            };
           };
+          volumesByName.config.configMap.name = "ghostbudget";
+          volumesByName.data.persistentVolumeClaim.claimName = "ghostbudget";
+          volumesByName.log.emptyDir = { };
         };
       };
     };

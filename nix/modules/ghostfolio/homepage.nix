@@ -64,17 +64,15 @@ in
       };
     };
     services.k3s.manifests.homepage-refresh-ghostfolio-api-token-static.source = ./homepage.yaml;
-    kubetree.resources.homepage =
+    kubetree.resources.ghostfolio =
       let
         jobSpec = {
-          template.metadata.labels = {
-            "app.kubernetes.io/name" = "ghostfolio";
-            "cluster.local/apiserver-egress" = "allow";
-            "cluster.local/ghostfolio-egress" = "allow";
-          };
-          template.podSpecMacro = {
+          allowEgress = [
+            "apiserver"
+            "ghostfolio"
+          ];
+          podSpecMacro = {
             name = "token";
-            restartPolicy = "OnFailure";
             serviceAccountName = "refresh-ghostfolio-api-token";
             mainContainer =
               let
@@ -113,8 +111,8 @@ in
           data."refresh-ghostfolio-api-token.sh" = builtins.readFile (lib.getExe refreshGhostfolioAPIToken);
         };
         create-ghostfolio-api-token = {
-          apiVersion = "batch/v1";
-          kind = "Job";
+          apiVersion = "cluster.local";
+          kind = "JobMacro";
           metadata = {
             namespace = "homepage";
             name = "create-ghostfolio-api-token";
@@ -123,15 +121,15 @@ in
           spec = jobSpec;
         };
         refresh-ghostfolio-api-token = {
-          apiVersion = "batch/v1";
-          kind = "CronJob";
+          apiVersion = "cluster.local";
+          kind = "CronJobMacro";
           metadata = {
             namespace = "homepage";
             name = "refresh-ghostfolio-api-token";
             labels."app.kubernetes.io/name" = "homepage";
           };
           spec.schedule = "30 03 01 */6 *";
-          spec.jobTemplate.spec = jobSpec;
+          spec.jobSpecMacro = jobSpec;
         };
       };
   };

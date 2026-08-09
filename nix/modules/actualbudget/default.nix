@@ -14,7 +14,7 @@ in
   config = lib.mkIf cfg.enable {
     homelab.cluster.backup.volumes.actualbudget.actualbudget = [ "/" ];
     kubetree.resources.actualbudget = {
-      service-macro = {
+      workload = {
         apiVersion = "cluster.local";
         kind = "WorkloadMacro";
         metadata.name = "actualbudget";

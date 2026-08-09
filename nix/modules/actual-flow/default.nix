@@ -172,71 +172,56 @@ in
         };
       };
       import-transactions = {
-        apiVersion = "batch/v1";
-        kind = "CronJob";
+        apiVersion = "cluster.local";
+        kind = "CronJobMacro";
         metadata.namespace = "actualbudget";
         metadata.name = "import-transactions";
         metadata.labels."app.kubernetes.io/name" = "actual-flow";
         spec.schedule = cfg.importSchedule;
-        spec.jobTemplate.spec.template = {
-          metadata.labels = {
-            "app.kubernetes.io/name" = "actual-flow";
-            "cluster.local/internet-egress" = "allow";
-            "cluster.local/actualbudget-egress" = "allow";
+        spec.allowEgress = [
+          "internet"
+          "actualbudget"
+        ];
+        spec.podSpecMacro = {
+          initContainersByName.setup-config = {
+            image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
+            imagePullPolicy = "Never";
+            args = [
+              ''
+                jq --arg key "$LUNCHFLOW_API_KEY" '.lunchFlow.apiKey = $key' /config/config.json >/config-tmp/config.json
+              ''
+            ];
+            securityContext = {
+              allowPrivilegeEscalation = false;
+              readOnlyRootFilesystem = true;
+              capabilities.drop = [ "ALL" ];
+            };
+            envByName.LUNCHFLOW_API_KEY.valueFrom.secretKeyRef = {
+              name = "lunchflow-api-key";
+              key = "LUNCHFLOW_API_KEY";
+            };
+            volumeMountsByPath = {
+              "/config" = "config";
+              "/config-tmp" = "config-tmp";
+            };
           };
-          podSpecMacro = {
-            name = "actual-flow";
-            restartPolicy = "OnFailure";
-            securityContext =
-              let
-                secCtx = config.kubetree.workload-macros.securityContext;
-              in
-              {
-                runAsUser = secCtx.runAsUser;
-                runAsGroup = secCtx.runAsGroup;
-                supplementalGroups = secCtx.supplementalGroups;
-                fsGroup = secCtx.runAsGroup;
+          mainContainer = {
+            image = "${actualFlowImage.buildArgs.name}:${actualFlowImage.imageTag}";
+            imagePullPolicy = "Never";
+            workingDir = "/data";
+            args = [ "import" ];
+            volumeMountsByPath = {
+              "/data/config.json" = {
+                name = "config-tmp";
+                subPath = "config.json";
               };
-            initContainersByName.setup-config = {
-              image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
-              imagePullPolicy = "Never";
-              args = [
-                ''
-                  jq --arg key "$LUNCHFLOW_API_KEY" '.lunchFlow.apiKey = $key' /config/config.json >/config-tmp/config.json
-                ''
-              ];
-              securityContext = {
-                allowPrivilegeEscalation = false;
-                readOnlyRootFilesystem = true;
-                capabilities.drop = [ "ALL" ];
-              };
-              envByName.LUNCHFLOW_API_KEY.valueFrom.secretKeyRef = {
-                name = "lunchflow-api-key";
-                key = "LUNCHFLOW_API_KEY";
-              };
-              volumeMountsByPath = {
-                "/config" = "config";
-                "/config-tmp" = "config-tmp";
-              };
+              "/data/actual-data" = "data";
             };
-            mainContainer = {
-              image = "${actualFlowImage.buildArgs.name}:${actualFlowImage.imageTag}";
-              imagePullPolicy = "Never";
-              workingDir = "/data";
-              args = [ "import" ];
-              volumeMountsByPath = {
-                "/data/config.json" = {
-                  name = "config-tmp";
-                  subPath = "config.json";
-                };
-                "/data/actual-data" = "data";
-              };
-            };
-            volumesByName = {
-              config.configMap.name = "actual-flow";
-              config-tmp.emptyDir.medium = "Memory";
-              data.persistentVolumeClaim.claimName = "actual-flow";
-            };
+          };
+          volumesByName = {
+            config.configMap.name = "actual-flow";
+            config-tmp.emptyDir.medium = "Memory";
+            data.persistentVolumeClaim.claimName = "actual-flow";
           };
         };
       };

@@ -69,7 +69,7 @@ in
     };
     homelab.redis.databases.ghostfolio = lib.mkDefault "0";
     kubetree.resources.ghostfolio = {
-      service = {
+      workload = {
         apiVersion = "cluster.local";
         kind = "WorkloadMacro";
         metadata.name = "ghostfolio";
