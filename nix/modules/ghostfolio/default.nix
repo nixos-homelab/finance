@@ -6,11 +6,11 @@
   ...
 }:
 let
-  cfg = config.homelab.workloads.ghostfolio;
+  cfg = config.homelab.ghostfolio;
   hllib = inputs.homelab-shared.lib;
 in
 {
-  options.homelab.workloads.ghostfolio = {
+  options.homelab.ghostfolio = {
     enable = lib.mkEnableOption "Ghostfolio";
   };
   imports = [
@@ -21,14 +21,14 @@ in
   ++ self.lib.importsApply [ ./homepage.nix ];
   # TODO: Add tini
   config = lib.mkIf cfg.enable {
-    homelab.workloads.postgresql.databases.ghostfolio.backup.enable = lib.mkDefault true;
+    homelab.postgresql.databases.ghostfolio.backup.enable = lib.mkDefault true;
     assertions = [
       {
-        assertion = config.homelab.workloads.postgresql.enable;
+        assertion = config.homelab.postgresql.enable;
         message = "Ghostfolio depends on the PostgreSQL service. Enable with `homelab.postgresql.enable=true`";
       }
       {
-        assertion = config.homelab.workloads.redis.enable;
+        assertion = config.homelab.redis.enable;
         message = "Ghostfolio depends on the Redis service. Enable with `homelab.redis.enable=true`";
       }
     ];
@@ -67,7 +67,7 @@ in
         }
       ];
     };
-    homelab.workloads.redis.databases.ghostfolio = lib.mkDefault "0";
+    homelab.redis.databases.ghostfolio = lib.mkDefault "0";
     kubetree.resources.ghostfolio = {
       service = {
         apiVersion = "cluster.local";
@@ -85,7 +85,7 @@ in
             envByName."DATABASE_URL" =
               "postgresql://ghostfolio:ghostfolio@postgresql.postgresql:5432/ghostfolio";
             envByName."REDIS_HOST" = "redis.redis";
-            envByName."REDIS_DB" = config.homelab.workloads.redis.databases.ghostfolio;
+            envByName."REDIS_DB" = config.homelab.redis.databases.ghostfolio;
             portsByName.web = 3333;
             envFrom = [ { secretRef.name = "ghostfolio-secrets"; } ];
             livenessProbe.httpGet.port = "web";

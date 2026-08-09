@@ -5,10 +5,10 @@
   ...
 }:
 let
-  cfg = config.homelab.workloads.actualbudget;
+  cfg = config.homelab.actualbudget;
 in
 {
-  options.homelab.workloads.actualbudget = {
+  options.homelab.actualbudget = {
     enable = lib.mkEnableOption "Actual Budget";
   };
   config = lib.mkIf cfg.enable {

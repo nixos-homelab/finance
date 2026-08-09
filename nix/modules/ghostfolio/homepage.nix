@@ -19,14 +19,14 @@ let
       --from-literal=GHOSTFOLIO_API_TOKEN="$GHOSTFOLIO_API_TOKEN" | \
       ${lib.getExe pkgs.kubectl} apply -f -
   '';
-  cfg = config.homelab.workloads.homepage.integrations.ghostfolio;
+  cfg = config.homelab.homepage.integrations.ghostfolio;
 in
 {
-  options.homelab.workloads.homepage.integrations.ghostfolio = {
+  options.homelab.homepage.integrations.ghostfolio = {
     enable = lib.mkOption {
       description = "integration of ghostfolio with homepage";
       type = lib.types.bool;
-      default = config.homelab.workloads.ghostfolio.enable && config.homelab.workloads.homepage.enable;
+      default = config.homelab.ghostfolio.enable && config.homelab.homepage.enable;
     };
   };
   imports = [
@@ -41,7 +41,7 @@ in
         cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage ghostfolio-token GHOSTFOLIO_TOKEN "''${GHOSTFOLIO_TOKEN:?}"'';
       }
     ];
-    homelab.workloads.homepage = {
+    homelab.homepage = {
       allowEgress = [ "ghostfolio" ];
       services.Finance.Ghostfolio = {
         icon = "ghostfolio.png";

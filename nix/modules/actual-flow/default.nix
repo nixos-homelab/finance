@@ -7,7 +7,7 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.workloads.actualbudget;
+  cfg = config.homelab.actualbudget;
   hllib = inputs.homelab-shared.lib;
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   nodejs = pkgs.nodejs_24;
@@ -57,7 +57,7 @@ let
   };
 in
 {
-  options.homelab.workloads.actualbudget = {
+  options.homelab.actualbudget = {
     debug = lib.mkEnableOption "debug mode";
     importSchedule = lib.mkOption {
       description = "Cronjob notation of when the actual-flow import runs";
