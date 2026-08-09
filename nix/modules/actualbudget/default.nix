@@ -5,10 +5,10 @@
   ...
 }:
 let
-  cfg = config.homelab.services.actualbudget;
+  cfg = config.homelab.workloads.actualbudget;
 in
 {
-  options.homelab.services.actualbudget = {
+  options.homelab.workloads.actualbudget = {
     enable = lib.mkEnableOption "Actual Budget";
   };
   config = lib.mkIf cfg.enable {
@@ -16,13 +16,13 @@ in
     kubetree.resources.actualbudget = {
       service-macro = {
         apiVersion = "cluster.local";
-        kind = "ServiceMacro";
+        kind = "WorkloadMacro";
         metadata.name = "actualbudget";
         spec = {
           allowEgress = [ "internet" ];
           allowIngress = [ "gateway" ];
           dataPath = "/data";
-          servicePodSpec.mainContainer = {
+          podSpecMacro.mainContainer = {
             image = "actualbudget/actual-server:sha-25d0729-alpine";
             envByName.ACTUAL_LOGIN_METHOD = "header";
             envByName.ACTUAL_ALLOWED_LOGIN_METHODS = "header,password";
@@ -39,7 +39,7 @@ in
       };
       service-gateway = {
         apiVersion = "cluster.local";
-        kind = "ServiceGateway";
+        kind = "GatewayMacro";
         metadata.name = "actualbudget";
         spec.port = 5006;
         spec.requestHeaderModifier.add = [

@@ -6,11 +6,11 @@
   ...
 }:
 let
-  cfg = config.homelab.services.ghostfolio;
+  cfg = config.homelab.workloads.ghostfolio;
   hllib = inputs.homelab-shared.lib;
 in
 {
-  options.homelab.services.ghostfolio = {
+  options.homelab.workloads.ghostfolio = {
     enable = lib.mkEnableOption "Ghostfolio";
   };
   imports = [
@@ -21,14 +21,14 @@ in
   ++ self.lib.importsApply [ ./homepage.nix ];
   # TODO: Add tini
   config = lib.mkIf cfg.enable {
-    homelab.services.postgresql.databases.ghostfolio.backup.enable = lib.mkDefault true;
+    homelab.workloads.postgresql.databases.ghostfolio.backup.enable = lib.mkDefault true;
     assertions = [
       {
-        assertion = config.homelab.services.postgresql.enable;
+        assertion = config.homelab.workloads.postgresql.enable;
         message = "Ghostfolio depends on the PostgreSQL service. Enable with `homelab.postgresql.enable=true`";
       }
       {
-        assertion = config.homelab.services.redis.enable;
+        assertion = config.homelab.workloads.redis.enable;
         message = "Ghostfolio depends on the Redis service. Enable with `homelab.redis.enable=true`";
       }
     ];
@@ -67,11 +67,11 @@ in
         }
       ];
     };
-    homelab.services.redis.databases.ghostfolio = lib.mkDefault "0";
+    homelab.workloads.redis.databases.ghostfolio = lib.mkDefault "0";
     kubetree.resources.ghostfolio = {
       service = {
         apiVersion = "cluster.local";
-        kind = "ServiceMacro";
+        kind = "WorkloadMacro";
         metadata.name = "ghostfolio";
         spec = {
           allowEgress = [
@@ -80,12 +80,12 @@ in
             "redis"
           ];
           ingressPort = 3333;
-          servicePodSpec.mainContainer = {
+          podSpecMacro.mainContainer = {
             image = "ghostfolio/ghostfolio:2.228.0";
             envByName."DATABASE_URL" =
               "postgresql://ghostfolio:ghostfolio@postgresql.postgresql:5432/ghostfolio";
             envByName."REDIS_HOST" = "redis.redis";
-            envByName."REDIS_DB" = config.homelab.services.redis.databases.ghostfolio;
+            envByName."REDIS_DB" = config.homelab.workloads.redis.databases.ghostfolio;
             portsByName.web = 3333;
             envFrom = [ { secretRef.name = "ghostfolio-secrets"; } ];
             livenessProbe.httpGet.port = "web";

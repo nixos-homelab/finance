@@ -19,14 +19,14 @@ let
       --from-literal=GHOSTFOLIO_API_TOKEN="$GHOSTFOLIO_API_TOKEN" | \
       ${lib.getExe pkgs.kubectl} apply -f -
   '';
-  cfg = config.homelab.services.homepage.integrations.ghostfolio;
+  cfg = config.homelab.workloads.homepage.integrations.ghostfolio;
 in
 {
-  options.homelab.services.homepage.integrations.ghostfolio = {
+  options.homelab.workloads.homepage.integrations.ghostfolio = {
     enable = lib.mkOption {
       description = "integration of ghostfolio with homepage";
       type = lib.types.bool;
-      default = config.homelab.services.ghostfolio.enable && config.homelab.services.homepage.enable;
+      default = config.homelab.workloads.ghostfolio.enable && config.homelab.workloads.homepage.enable;
     };
   };
   imports = [
@@ -41,7 +41,7 @@ in
         cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret homepage ghostfolio-token GHOSTFOLIO_TOKEN "''${GHOSTFOLIO_TOKEN:?}"'';
       }
     ];
-    homelab.services.homepage = {
+    homelab.workloads.homepage = {
       allowEgress = [ "ghostfolio" ];
       services.Finance.Ghostfolio = {
         icon = "ghostfolio.png";
@@ -72,7 +72,7 @@ in
             "cluster.local/apiserver-egress" = "allow";
             "cluster.local/ghostfolio-egress" = "allow";
           };
-          template.servicePodSpec = {
+          template.podSpecMacro = {
             name = "token";
             restartPolicy = "OnFailure";
             serviceAccountName = "refresh-ghostfolio-api-token";

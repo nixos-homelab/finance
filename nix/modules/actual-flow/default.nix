@@ -7,7 +7,7 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.services.actualbudget;
+  cfg = config.homelab.workloads.actualbudget;
   hllib = inputs.homelab-shared.lib;
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   nodejs = pkgs.nodejs_24;
@@ -57,7 +57,7 @@ let
   };
 in
 {
-  options.homelab.services.actualbudget = {
+  options.homelab.workloads.actualbudget = {
     debug = lib.mkEnableOption "debug mode";
     importSchedule = lib.mkOption {
       description = "Cronjob notation of when the actual-flow import runs";
@@ -124,7 +124,7 @@ in
   };
   imports = [
     inputs.setup-secrets.nixosModules.default
-    inputs.homelab-shared.nixosModules.service-macros
+    inputs.homelab-shared.nixosModules.workload-macros
   ];
   config = lib.mkIf (cfg.enable && cfg.importSchedule != null) {
     setup-secrets = {
@@ -184,12 +184,12 @@ in
             "cluster.local/internet-egress" = "allow";
             "cluster.local/actualbudget-egress" = "allow";
           };
-          servicePodSpec = {
+          podSpecMacro = {
             name = "actual-flow";
             restartPolicy = "OnFailure";
             securityContext =
               let
-                secCtx = config.kubetree.service-macros.securityContext;
+                secCtx = config.kubetree.workload-macros.securityContext;
               in
               {
                 runAsUser = secCtx.runAsUser;

@@ -7,7 +7,7 @@
 }:
 let
   ccfg = config.homelab.cluster;
-  cfg = config.homelab.services.ghostfolio;
+  cfg = config.homelab.workloads.ghostfolio;
   hllib = inputs.homelab-shared.lib;
   nodejs = pkgs.nodejs_24;
   ghostbudget = pkgs.buildNpmPackage rec {
@@ -54,7 +54,7 @@ let
   };
 in
 {
-  options.homelab.services.ghostfolio = {
+  options.homelab.workloads.ghostfolio = {
     debug = lib.mkEnableOption "debug mode";
     importSchedule = lib.mkOption {
       description = "Cronjob notation of when the ghostbudget sync runs";
@@ -100,7 +100,7 @@ in
   };
   imports = [ inputs.setup-secrets.nixosModules.default ];
   config =
-    lib.mkIf (cfg.enable && cfg.importSchedule != null && config.homelab.services.actualbudget.enable)
+    lib.mkIf (cfg.enable && cfg.importSchedule != null && config.homelab.workloads.actualbudget.enable)
       {
         services.k3s.images = [ ghostbudgetImage ];
         setup-secrets.destinations = [
@@ -161,7 +161,7 @@ in
                 "cluster.local/ghostfolio-egress" = "allow";
                 "cluster.local/actualbudget-egress" = "allow";
               };
-              servicePodSpec = {
+              podSpecMacro = {
                 name = "ghostbudget";
                 restartPolicy = "OnFailure";
                 mainContainer = {
