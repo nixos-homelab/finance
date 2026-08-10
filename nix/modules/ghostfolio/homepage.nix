@@ -128,8 +128,10 @@ in
             name = "refresh-ghostfolio-api-token";
             labels."app.kubernetes.io/name" = "homepage";
           };
-          spec.schedule = "30 03 01 */6 *";
-          spec.jobSpecMacro = jobSpec;
+          spec = {
+            schedule = "30 03 01 */6 *";
+          }
+          // jobSpec;
         };
       };
   };

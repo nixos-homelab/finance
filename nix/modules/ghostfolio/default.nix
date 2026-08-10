@@ -68,29 +68,27 @@ in
       ];
     };
     homelab.redis.databases.ghostfolio = lib.mkDefault "0";
-    kubetree.resources.ghostfolio = {
-      workload = {
-        apiVersion = "cluster.local";
-        kind = "WorkloadMacro";
-        metadata.name = "ghostfolio";
-        spec = {
-          allowEgress = [
-            "internet"
-            "postgresql"
-            "redis"
-          ];
-          ingressPort = 3333;
-          podSpecMacro.mainContainer = {
-            image = "ghostfolio/ghostfolio:2.228.0";
-            envByName."DATABASE_URL" =
-              "postgresql://ghostfolio:ghostfolio@postgresql.postgresql:5432/ghostfolio";
-            envByName."REDIS_HOST" = "redis.redis";
-            envByName."REDIS_DB" = config.homelab.redis.databases.ghostfolio;
-            portsByName.web = 3333;
-            envFrom = [ { secretRef.name = "ghostfolio-secrets"; } ];
-            livenessProbe.httpGet.port = "web";
-            readinessProbe.httpGet.port = "web";
-          };
+    kubetree.resources.ghostfolio.workload = {
+      apiVersion = "cluster.local";
+      kind = "WorkloadMacro";
+      metadata.name = "ghostfolio";
+      spec = {
+        allowEgress = [
+          "internet"
+          "postgresql"
+          "redis"
+        ];
+        ingressPort = 3333;
+        podSpecMacro.mainContainer = {
+          image = "ghostfolio/ghostfolio:2.228.0";
+          envByName."DATABASE_URL" =
+            "postgresql://ghostfolio:ghostfolio@postgresql.postgresql:5432/ghostfolio";
+          envByName."REDIS_HOST" = "redis.redis";
+          envByName."REDIS_DB" = config.homelab.redis.databases.ghostfolio;
+          portsByName.web = 3333;
+          envFrom = [ { secretRef.name = "ghostfolio-secrets"; } ];
+          livenessProbe.httpGet.port = "web";
+          readinessProbe.httpGet.port = "web";
         };
       };
     };
