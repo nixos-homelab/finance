@@ -59,10 +59,9 @@ in
             "GHOSTFOLIO_JWT_SECRET_KEY"
           ];
           cmd = hllib.setup-secrets.mkScript pkgs ''
-            kubectl create secret generic -n ghostfolio --dry-run=client ghostfolio-secrets -oyaml \
-              --from-literal=ACCESS_TOKEN_SALT="$GHOSTFOLIO_ACCESS_TOKEN_SALT" \
-              --from-literal=JWT_SECRET_KEY="$GHOSTFOLIO_JWT_SECRET_KEY" \
-              | kubectl apply -f -
+            setKubeSecret ghostfolio ghostfolio-secrets \
+              ACCESS_TOKEN_SALT "''${GHOSTFOLIO_ACCESS_TOKEN_SALT:?}" \
+              JWT_SECRET_KEY "''${GHOSTFOLIO_JWT_SECRET_KEY:?}"
           '';
         }
       ];
