@@ -17,7 +17,7 @@ metadata:
 rules:
 - apiGroups: [ "" ]
   resources: [ secrets ]
-  resourceNames: [ ghostfolio-token ]
+  resourceNames: [ ghostfolio-token, ghostfolio-api-token ]
   verbs:
   - get
 - apiGroups: [ "" ]
