@@ -17,7 +17,7 @@ let
       jq -r .authToken
     )
     kubectl create -n homepage secret generic --dry-run=client -oyaml ghostfolio-api-token \
-      --from-literal=GHOSTFOLIO_API_TOKEN="$GHOSTFOLIO_API_TOKEN" | \
+      --from-literal=HOMEPAGE_VAR_GHOSTFOLIO_API_TOKEN="$GHOSTFOLIO_API_TOKEN" | \
       kubectl apply -f -
   '';
   cfg = config.homelab.homepage.integrations.ghostfolio;
@@ -59,10 +59,7 @@ in
           key = "{{HOMEPAGE_VAR_GHOSTFOLIO_API_TOKEN}}";
         };
       };
-      envByName.HOMEPAGE_VAR_GHOSTFOLIO_API_TOKEN.valueFrom.secretKeyRef = {
-        name = "ghostfolio-api-token";
-        key = "GHOSTFOLIO_API_TOKEN";
-      };
+      envFrom = [ { secretRef.name = "ghostfolio-api-key"; } ];
     };
     services.k3s.manifests.homepage-refresh-ghostfolio-api-token-static.source = ./homepage.yaml;
     kubetree.resources.ghostfolio.create-ghostfolio-api-token = {
