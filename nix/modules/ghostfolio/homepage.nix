@@ -28,6 +28,7 @@ in
       description = "integration of ghostfolio with homepage";
       type = lib.types.bool;
       default = config.homelab.ghostfolio.enable && config.homelab.homepage.enable;
+      defaultText = lib.literalExpression "config.homelab.ghostfolio.enable && config.homelab.homepage.enable";
     };
   };
   imports = [
