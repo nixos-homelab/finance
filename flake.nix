@@ -57,7 +57,6 @@
             importsApply = map (path: importApply path { inherit self inputs; });
           };
           nixosModules = {
-            actual-flow = importApply ./nix/modules/actual-flow { inherit self inputs; };
             actualbudget = importApply ./nix/modules/actualbudget { inherit self inputs; };
             ghostbudget = importApply ./nix/modules/ghostbudget { inherit self inputs; };
             ghostfolio = importApply ./nix/modules/ghostfolio { inherit self inputs; };
