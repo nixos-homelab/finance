@@ -34,6 +34,7 @@ in
   imports = [
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-shared.nixosModules.homepage
+    self.nixosModules.homepage
   ];
   config = lib.mkIf cfg.enable {
     setup-secrets.destinations = [
@@ -44,21 +45,25 @@ in
       }
     ];
     homelab.homepage = {
+      sections.Finance.enable = lib.mkDefault true;
       allowEgress = [ "ghostfolio" ];
       services.Finance.Ghostfolio = {
+        enable = lib.mkDefault true;
         icon = "ghostfolio.png";
         description = "Portfolio tracker";
         href = "https://ghostfolio.${ccfg.domain}";
-        widget = {
-          type = "ghostfolio";
-          url = "http://ghostfolio.ghostfolio:3333";
-          fields = [
-            "gross_percent_today"
-            "gross_percent_1y"
-            "net_worth"
-          ];
-          key = "{{HOMEPAGE_VAR_GHOSTFOLIO_API_TOKEN}}";
-        };
+        widgets = [
+          {
+            type = "ghostfolio";
+            url = "http://ghostfolio.ghostfolio:3333";
+            fields = [
+              "gross_percent_today"
+              "gross_percent_1y"
+              "net_worth"
+            ];
+            key = "{{HOMEPAGE_VAR_GHOSTFOLIO_API_TOKEN}}";
+          }
+        ];
       };
       envFrom = [ { secretRef.name = "ghostfolio-api-token"; } ];
     };

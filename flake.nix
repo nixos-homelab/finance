@@ -60,6 +60,7 @@
             actualbudget = importApply ./nix/modules/actualbudget { inherit self inputs; };
             ghostbudget = importApply ./nix/modules/ghostbudget { inherit self inputs; };
             ghostfolio = importApply ./nix/modules/ghostfolio { inherit self inputs; };
+            homepage = importApply ./nix/modules/homepage { inherit self inputs; };
           };
         };
         perSystem =

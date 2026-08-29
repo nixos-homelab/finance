@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, self, ... }:
 {
   lib,
   pkgs,
@@ -21,12 +21,14 @@ in
   imports = [
     inputs.setup-secrets.nixosModules.default
     inputs.homelab-shared.nixosModules.homepage
+    self.nixosModules.homepage
   ];
   config = lib.mkIf cfg.enable {
     homelab.homepage = {
-      assets."actualbudget.png" = ./logo.png;
-      bookmarks.Finance.actualbudget = {
-        icon = "/assets/actualbudget.png";
+      sections.Finance.enable = lib.mkDefault true;
+      services.Finance.actualbudget = {
+        enable = lib.mkDefault true;
+        icon = "actual-budget.png";
         href = "https://actualbudget.${ccfg.domain}";
         description = "Budgeting app";
       };
