@@ -60,7 +60,7 @@ in
           key = "{{HOMEPAGE_VAR_GHOSTFOLIO_API_TOKEN}}";
         };
       };
-      envFrom = [ { secretRef.name = "ghostfolio-api-key"; } ];
+      envFrom = [ { secretRef.name = "ghostfolio-api-token"; } ];
     };
     services.k3s.manifests.homepage-refresh-ghostfolio-api-token-static.source = ./homepage.yaml;
     kubetree.resources.ghostfolio.create-ghostfolio-api-token = {
