@@ -80,8 +80,13 @@ in
         ingressPort = 3333;
         podSpecMacro.mainContainer = {
           image = "ghostfolio/ghostfolio:2.228.0";
+          # Defined before DATABASE_URL, which $(…) needs
+          envByName."DATABASE_PASSWORD".valueFrom.secretKeyRef = {
+            name = "postgresql-password";
+            key = "password";
+          };
           envByName."DATABASE_URL" =
-            "postgresql://ghostfolio:ghostfolio@postgresql.postgresql:5432/ghostfolio";
+            "postgresql://ghostfolio:$(DATABASE_PASSWORD)@postgresql.postgresql:5432/ghostfolio";
           envByName."REDIS_HOST" = "redis.redis";
           envByName."REDIS_DB" = config.homelab.redis.databases.ghostfolio;
           portsByName.web = 3333;
