@@ -8,6 +8,17 @@
 let
   cfg = config.homelab.ghostfolio;
   hllib = inputs.homelab-shared.lib;
+  # Generated only when the Secret is missing, never when the API call fails
+  secretSource = description: field: {
+    inherit description;
+    cmd = hllib.setup-secrets.mkScript pkgs ''
+      if [[ -n $(kubectl -n ghostfolio get secret ghostfolio-secrets --ignore-not-found -oname) ]]; then
+        getKubeSecret ghostfolio ghostfolio-secrets ${field}
+      else
+        head -c 1024 /dev/urandom | tr -dc A-Za-z0-9 | head -c 64
+      fi
+    '';
+  };
 in
 {
   options.homelab.ghostfolio = {
@@ -37,20 +48,8 @@ in
         description = "Ghostfolio Token";
         cmd = hllib.setup-secrets.mkScript pkgs "getKubeSecret ghostfolio ghostfolio-token GHOSTFOLIO_TOKEN";
       };
-      sources.GHOSTFOLIO_ACCESS_TOKEN_SALT = {
-        description = "Ghostfolio Access Token Salt";
-        cmd = hllib.setup-secrets.mkScript pkgs ''
-          getKubeSecret ghostfolio ghostfolio-secrets ACCESS_TOKEN_SALT || \
-          tr -dc A-Za-z0-9 </dev/urandom | head -c 64; echo
-        '';
-      };
-      sources.GHOSTFOLIO_JWT_SECRET_KEY = {
-        description = "Ghostfolio JWT Secret Key";
-        cmd = hllib.setup-secrets.mkScript pkgs ''
-          getKubeSecret ghostfolio ghostfolio-secrets JWT_SECRET_KEY || \
-          tr -dc A-Za-z0-9 </dev/urandom | head -c 64; echo
-        '';
-      };
+      sources.GHOSTFOLIO_ACCESS_TOKEN_SALT = secretSource "Ghostfolio Access Token Salt" "ACCESS_TOKEN_SALT";
+      sources.GHOSTFOLIO_JWT_SECRET_KEY = secretSource "Ghostfolio JWT Secret Key" "JWT_SECRET_KEY";
       destinations = [
         {
           logPrefix = "Ghostfolio (ACCESS_TOKEN_SALT & JWT_SECRET_KEY)";
