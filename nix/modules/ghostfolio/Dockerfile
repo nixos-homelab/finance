@@ -1,1 +1,1 @@
-FROM ghostfolio/ghostfolio:2.228.0@sha256:355540f68c385c85dc6205cc014a185e51da51b5cae7293c2548eb5260e7cb05
+FROM ghostfolio/ghostfolio:3.98.0@sha256:899698d95d07c9665c082e5db4e54d8f81c0686ed2ffa9c24d8021e9b5b7c646
