@@ -1,0 +1,1 @@
+FROM actualbudget/actual-server:sha-25d0729-alpine@sha256:2b0ab7e5b29080926e19eee1fe4c31c0555e4bfd500aa5e35a4dcf216ce8f835

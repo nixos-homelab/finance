@@ -1,10 +1,12 @@
-{ self, ... }:
+{ inputs, self, ... }:
 {
   lib,
+  pkgs,
   config,
   ...
 }:
 let
+  images = inputs.homelab-shared.lib.images.pinned pkgs ./Dockerfile;
   cfg = config.homelab.actualbudget;
 in
 {
@@ -13,6 +15,7 @@ in
   };
   imports = self.lib.importsApply [ ./homepage.nix ];
   config = lib.mkIf cfg.enable {
+    services.k3s.images = builtins.attrValues images;
     homelab.cluster.backup.volumes.actualbudget.actualbudget = [ "/" ];
     kubetree.resources.actualbudget = {
       workload = {
@@ -24,7 +27,8 @@ in
           allowIngress = [ "gateway" ];
           dataPath = "/data";
           podSpecMacro.mainContainer = {
-            image = "actualbudget/actual-server:sha-25d0729-alpine";
+            image = images."actualbudget/actual-server".ref;
+            imagePullPolicy = "Never";
             envByName.ACTUAL_LOGIN_METHOD = "header";
             envByName.ACTUAL_ALLOWED_LOGIN_METHODS = "header,password";
             envByName.ACTUAL_TRUSTED_AUTH_PROXIES = "::/0,0.0.0.0/0";

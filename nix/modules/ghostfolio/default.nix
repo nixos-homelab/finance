@@ -6,6 +6,7 @@
   ...
 }:
 let
+  images = inputs.homelab-shared.lib.images.pinned pkgs ./Dockerfile;
   cfg = config.homelab.ghostfolio;
   hllib = inputs.homelab-shared.lib;
   # Generated only when the Secret is missing, never when the API call fails
@@ -32,6 +33,7 @@ in
   ++ self.lib.importsApply [ ./homepage.nix ];
   # TODO: Add tini
   config = lib.mkIf cfg.enable {
+    services.k3s.images = builtins.attrValues images;
     homelab.postgresql.databases.ghostfolio.backup.enable = lib.mkDefault true;
     assertions = [
       {
@@ -78,7 +80,8 @@ in
         ];
         ingressPort = 3333;
         podSpecMacro.mainContainer = {
-          image = "ghostfolio/ghostfolio:2.228.0";
+          image = images."ghostfolio/ghostfolio".ref;
+          imagePullPolicy = "Never";
           # Defined before DATABASE_URL, which $(…) needs
           envByName."DATABASE_PASSWORD".valueFrom.secretKeyRef = {
             name = "postgresql-password";
