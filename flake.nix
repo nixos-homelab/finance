@@ -66,6 +66,23 @@
         perSystem =
           { pkgs, lib, ... }:
           {
+            checks.manifests = inputs.homelab-shared.lib.checks.manifests {
+              inherit pkgs;
+              modules = lib.attrValues self.nixosModules ++ [
+                {
+                  homelab = {
+                    actualbudget.enable = true;
+                    ghostfolio = {
+                      enable = true;
+                      importSchedule = "5 3 * * *";
+                      actualBudgetSyncId = "00000000-0000-0000-0000-000000000000";
+                      actualBudgetSyncMap.Checking = "Checking";
+                    };
+                    homepage.enable = true;
+                  };
+                }
+              ];
+            };
             packages = {
               options-docs = inputs.docs.lib.docs.options {
                 inherit pkgs;
