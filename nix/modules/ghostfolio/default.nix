@@ -93,6 +93,11 @@ in
           envByName."REDIS_DB" = config.homelab.redis.databases.ghostfolio;
           portsByName.web = 3333;
           envFrom = [ { secretRef.name = "ghostfolio-secrets"; } ];
+          # A first start migrates the database, which can outlast the liveness probe on a busy node
+          startupProbe = {
+            httpGet.port = "web";
+            failureThreshold = 30;
+          };
           livenessProbe.httpGet.port = "web";
           readinessProbe.httpGet.port = "web";
         };
