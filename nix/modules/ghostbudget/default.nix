@@ -10,6 +10,7 @@ let
   cfg = config.homelab.ghostfolio;
   hllib = inputs.homelab-shared.lib;
   nodejs = pkgs.nodejs_22;
+  nodejs-slim = pkgs.nodejs-slim_22;
   ghostbudget = pkgs.buildNpmPackage rec {
     inherit nodejs;
     name = "ghostbudget";
@@ -27,9 +28,14 @@ let
     };
     dontNpmInstall = true;
     dontNpmBuild = true;
-    dontNpmPrune = true;
     installPhase = ''
       runHook preInstall
+      npm prune --omit=dev --no-save
+      # Keep only the compiled addon; the build tree references python3
+      find node_modules/better-sqlite3/build -type f ! -name better_sqlite3.node -delete
+      rm -r node_modules/better-sqlite3/{deps,src}
+      # The image only has nodejs-slim, without npm
+      grep -rlZ ${nodejs} node_modules | xargs -0 sed -i 's|${nodejs}|${nodejs-slim}|'
       mkdir $out
       cp -a node_modules $src/src $out
       runHook postInstall
@@ -39,7 +45,7 @@ let
     name = "cluster.local/ghostbudget";
     copyToRoot = [
       pkgs.cacert
-      nodejs
+      nodejs-slim
       ghostbudget
     ]
     ++ lib.optionals cfg.debug ccfg.debugTools;
@@ -48,7 +54,7 @@ let
       "SSL_CERT_FILE=/etc/ssl/certs/ca-bundle.crt"
     ];
     config.Entrypoint = [
-      (pkgs.lib.getExe nodejs)
+      (lib.getExe nodejs-slim)
       "/src/index.js"
     ];
   };
