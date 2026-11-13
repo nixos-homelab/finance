@@ -68,38 +68,38 @@ in
       ];
     };
     homelab.redis.databases.ghostfolio = lib.mkDefault "0";
-    kubetree.resources.ghostfolio.workload = {
-      apiVersion = "cluster.local";
-      kind = "WorkloadMacro";
-      metadata.name = "ghostfolio";
-      spec = {
-        allowEgress = [
-          "internet"
-          "postgresql"
-          "redis"
-        ];
-        ingressPort = 3333;
-        podSpecMacro.mainContainer = {
-          image = images."ghostfolio/ghostfolio".ref;
-          imagePullPolicy = "Never";
-          # Defined before DATABASE_URL, which $(…) needs
-          envByName."DATABASE_PASSWORD".valueFrom.secretKeyRef = {
-            name = "postgresql-password";
-            key = "password";
+    homelab.kubernetes.submodules.instances.ghostfolio = {
+      submodule = "manifest";
+      config.submodules.instances.ghostfolio = {
+        submodule = "workload";
+        args = {
+          allowEgress = [
+            "internet"
+            "postgresql"
+            "redis"
+          ];
+          ingressPort = 3333;
+          ports.web = 3333;
+          container = {
+            image = images."ghostfolio/ghostfolio".ref;
+            imagePullPolicy = "Never";
+            # Defined before DATABASE_URL, which $(…) needs
+            env.DATABASE_PASSWORD.valueFrom.secretKeyRef = {
+              name = "postgresql-password";
+              key = "password";
+            };
+            env.DATABASE_URL.value = "postgresql://ghostfolio:$(DATABASE_PASSWORD)@postgresql.postgresql:5432/ghostfolio";
+            env.REDIS_HOST.value = "redis.redis";
+            env.REDIS_DB.value = config.homelab.redis.databases.ghostfolio;
+            envFrom = [ { secretRef.name = "ghostfolio-secrets"; } ];
+            # A first start migrates the database, which can outlast the liveness probe on a busy node
+            startupProbe = {
+              httpGet.port = "web";
+              failureThreshold = 30;
+            };
+            livenessProbe.httpGet.port = "web";
+            readinessProbe.httpGet.port = "web";
           };
-          envByName."DATABASE_URL" =
-            "postgresql://ghostfolio:$(DATABASE_PASSWORD)@postgresql.postgresql:5432/ghostfolio";
-          envByName."REDIS_HOST" = "redis.redis";
-          envByName."REDIS_DB" = config.homelab.redis.databases.ghostfolio;
-          portsByName.web = 3333;
-          envFrom = [ { secretRef.name = "ghostfolio-secrets"; } ];
-          # A first start migrates the database, which can outlast the liveness probe on a busy node
-          startupProbe = {
-            httpGet.port = "web";
-            failureThreshold = 30;
-          };
-          livenessProbe.httpGet.port = "web";
-          readinessProbe.httpGet.port = "web";
         };
       };
     };

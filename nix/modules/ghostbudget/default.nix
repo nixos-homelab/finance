@@ -114,83 +114,81 @@ in
         cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret ghostfolio ghostfolio-token GHOSTFOLIO_TOKEN "''${GHOSTFOLIO_TOKEN:?}"'';
       }
     ];
-    kubetree.resources.ghostbudget = {
+    homelab.kubernetes.submodules.instances.ghostbudget = {
+      submodule = "manifest";
       config = {
-        apiVersion = "v1";
-        kind = "ConfigMap";
-        metadata = {
-          namespace = "ghostfolio";
-          name = "ghostbudget";
-          labels."app.kubernetes.io/name" = "ghostbudget";
-        };
-        data."config.json" = builtins.toJSON {
-          accounts = lib.mapAttrsToList (
-            actualBudgetName: config:
-            {
-              actualBudgetName = actualBudgetName;
-            }
-            // (
-              if builtins.isAttrs config then
+        kubernetes.namespace = "ghostfolio";
+        kubernetes.resources = {
+          configMaps.ghostbudget = {
+            metadata.labels."app.kubernetes.io/name" = "ghostbudget";
+            data."config.json" = builtins.toJSON {
+              accounts = lib.mapAttrsToList (
+                actualBudgetName: config:
                 {
-                  ghostfolioName = config.ghostfolioName;
+                  actualBudgetName = actualBudgetName;
                 }
-                // lib.optionalAttrs (config.factor != null) { inherit (config) factor; }
-              else
-                { ghostfolioName = config; }
-            )
-          ) cfg.actualBudgetSyncMap;
-        };
-      };
-      volume = {
-        apiVersion = "v1";
-        kind = "PersistentVolumeClaim";
-        metadata.namespace = "ghostfolio";
-        metadata.name = "ghostbudget";
-        spec = {
-          accessModes = [ "ReadWriteOnce" ];
-          resources.requests.storage = "1Gi";
-          volumeMode = "Filesystem";
-        };
-      };
-      sync-accounts = {
-        apiVersion = "cluster.local";
-        kind = "CronJobMacro";
-        metadata.namespace = "ghostfolio";
-        metadata.name = "sync-accounts";
-        metadata.labels."app.kubernetes.io/name" = "ghostbudget";
-        spec.schedule = cfg.importSchedule;
-        spec.allowEgress = [
-          "ghostfolio"
-          "actualbudget"
-        ];
-        spec.podSpecMacro = {
-          name = "ghostbudget";
-          mainContainer = {
-            image = "${ghostbudgetImage.buildArgs.name}:${ghostbudgetImage.imageTag}";
-            imagePullPolicy = "Never";
-            args = [ "import" ];
-            envByName.ACTUAL_BUDGET_URL = "http://actualbudget.actualbudget:5006";
-            envByName.ACTUAL_BUDGET_PASS = "actual";
-            envByName.ACTUAL_BUDGET_SYNC_ID = cfg.actualBudgetSyncId;
-            # Not the actual Actual Budget data dir, this is just for the api library
-            envByName.ACTUAL_BUDGET_DATA_DIR = "/data";
-            envByName.GHOSTFOLIO_URL = "http://ghostfolio.ghostfolio:3333";
-            envByName.GHOSTFOLIO_TOKEN.valueFrom.secretKeyRef = {
-              name = "ghostfolio-token";
-              key = "GHOSTFOLIO_TOKEN";
-            };
-            volumeMountsByPath = {
-              "/config.json" = {
-                name = "config";
-                subPath = "config.json";
-              };
-              "/data" = "data";
-              "/logs" = "log";
+                // (
+                  if builtins.isAttrs config then
+                    {
+                      ghostfolioName = config.ghostfolioName;
+                    }
+                    // lib.optionalAttrs (config.factor != null) { inherit (config) factor; }
+                  else
+                    { ghostfolioName = config; }
+                )
+              ) cfg.actualBudgetSyncMap;
             };
           };
-          volumesByName.config.configMap.name = "ghostbudget";
-          volumesByName.data.persistentVolumeClaim.claimName = "ghostbudget";
-          volumesByName.log.emptyDir = { };
+          persistentVolumeClaims.ghostbudget.spec = {
+            accessModes = [ "ReadWriteOnce" ];
+            resources.requests.storage = "1Gi";
+            volumeMode = "Filesystem";
+          };
+        };
+        submodules.instances.sync-accounts = {
+          submodule = "cronjob";
+          args = {
+            schedule = cfg.importSchedule;
+            allowEgress = [
+              "ghostfolio"
+              "actualbudget"
+            ];
+            container = {
+              image = "${ghostbudgetImage.buildArgs.name}:${ghostbudgetImage.imageTag}";
+              imagePullPolicy = "Never";
+              args = [ "import" ];
+              env = {
+                ACTUAL_BUDGET_URL.value = "http://actualbudget.actualbudget:5006";
+                ACTUAL_BUDGET_PASS.value = "actual";
+                ACTUAL_BUDGET_SYNC_ID.value = cfg.actualBudgetSyncId;
+                # Not the actual Actual Budget data dir, this is just for the api library
+                ACTUAL_BUDGET_DATA_DIR.value = "/data";
+                GHOSTFOLIO_URL.value = "http://ghostfolio.ghostfolio:3333";
+                GHOSTFOLIO_TOKEN.valueFrom.secretKeyRef = {
+                  name = "ghostfolio-token";
+                  key = "GHOSTFOLIO_TOKEN";
+                };
+              };
+              volumeMounts = {
+                "/config.json" = {
+                  name = "config";
+                  subPath = "config.json";
+                };
+                "/data".name = "data";
+                "/logs".name = "log";
+              };
+            };
+          };
+          # Labeled as the ConfigMap, not after the CronJob
+          config.kubernetes.resources.cronJobs.sync-accounts = {
+            metadata.labels."app.kubernetes.io/name" = lib.mkForce "ghostbudget";
+            spec.jobTemplate.spec.template.metadata.labels."app.kubernetes.io/name" = lib.mkForce "ghostbudget";
+            spec.jobTemplate.spec.template.spec.volumes = {
+              config.configMap.name = "ghostbudget";
+              data.persistentVolumeClaim.claimName = "ghostbudget";
+              log.emptyDir = { };
+            };
+          };
         };
       };
     };

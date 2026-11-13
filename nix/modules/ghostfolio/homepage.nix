@@ -68,55 +68,61 @@ in
       envFrom = [ { secretRef.name = "ghostfolio-api-token"; } ];
     };
     services.k3s.manifests.homepage-refresh-ghostfolio-api-token-static.source = ./homepage.yaml;
-    kubetree.resources.ghostfolio.create-ghostfolio-api-token = {
-      apiVersion = "cluster.local";
-      kind = "ScriptMacro";
-      metadata.namespace = "homepage";
-      metadata.name = "create-ghostfolio-api-token";
-      spec.allowEgress = [
-        "apiserver"
-        "ghostfolio"
-      ];
-      spec = {
-        script = refreshGhostfolioAPIToken;
-        podSpecMacro.serviceAccountName = "refresh-ghostfolio-api-token";
-        podSpecMacro.mainContainer.envFrom = [ { secretRef.name = "ghostfolio-token"; } ];
+    # In the manifest of ghostfolio, as before
+    homelab.kubernetes.submodules.instances.ghostfolio.config.submodules.instances = {
+      create-ghostfolio-api-token = {
+        submodule = "script";
+        args = {
+          script = refreshGhostfolioAPIToken;
+          allowEgress = [
+            "apiserver"
+            "ghostfolio"
+          ];
+          container.envFrom = [ { secretRef.name = "ghostfolio-token"; } ];
+        };
+        config.kubernetes = {
+          namespace = "homepage";
+          resources.jobs.create-ghostfolio-api-token.spec.template.spec.serviceAccountName =
+            "refresh-ghostfolio-api-token";
+        };
       };
-    };
-    kubetree.resources.ghostfolio.refresh-ghostfolio-api-token = {
-      apiVersion = "cluster.local";
-      kind = "CronJobMacro";
-      metadata = {
-        namespace = "homepage";
-        name = "refresh-ghostfolio-api-token";
-        labels."app.kubernetes.io/name" = "homepage";
-      };
-      spec = {
-        schedule = "30 03 01 */6 *";
-        allowEgress = [
-          "apiserver"
-          "ghostfolio"
-        ];
-        podSpecMacro = {
-          serviceAccountName = "refresh-ghostfolio-api-token";
-          mainContainer = {
+      refresh-ghostfolio-api-token = {
+        submodule = "cronjob";
+        args = {
+          schedule = "30 03 01 */6 *";
+          allowEgress = [
+            "apiserver"
+            "ghostfolio"
+          ];
+          container = {
             image = "${container-utils.buildArgs.name}:${container-utils.imageTag}";
             imagePullPolicy = "Never";
             command = [ "bash" ];
             args = [ "/scripts/create-ghostfolio-api-token.sh" ];
-            envByName.GHOSTFOLIO_TOKEN.valueFrom.secretKeyRef = {
+            env.GHOSTFOLIO_TOKEN.valueFrom.secretKeyRef = {
               name = "ghostfolio-token";
               key = "GHOSTFOLIO_TOKEN";
             };
-            volumeMountsByPath = {
-              "/scripts/create-ghostfolio-api-token.sh" = {
-                name = "script";
-                subPath = "create-ghostfolio-api-token.sh";
-                readOnly = true;
+            volumeMounts."/scripts/create-ghostfolio-api-token.sh" = {
+              name = "script";
+              subPath = "create-ghostfolio-api-token.sh";
+              readOnly = true;
+            };
+          };
+        };
+        config.kubernetes = {
+          namespace = "homepage";
+          # Labeled as the homepage pods
+          resources.cronJobs.refresh-ghostfolio-api-token = {
+            metadata.labels."app.kubernetes.io/name" = lib.mkForce "homepage";
+            spec.jobTemplate.spec.template = {
+              metadata.labels."app.kubernetes.io/name" = lib.mkForce "homepage";
+              spec = {
+                serviceAccountName = "refresh-ghostfolio-api-token";
+                volumes.script.configMap.name = "create-ghostfolio-api-token";
               };
             };
           };
-          volumesByName.script.configMap.name = "create-ghostfolio-api-token";
         };
       };
     };
