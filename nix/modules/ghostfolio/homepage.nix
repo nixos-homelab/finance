@@ -6,7 +6,6 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   hllib = inputs.homelab-shared.lib;
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   refreshGhostfolioAPIToken = ''
@@ -51,7 +50,7 @@ in
         enable = lib.mkDefault true;
         icon = "ghostfolio.png";
         description = "Portfolio tracker";
-        href = "https://ghostfolio.${ccfg.domain}";
+        href = "https://ghostfolio.${config.homelab.workloads.domain}";
         widgets = [
           {
             type = "ghostfolio";

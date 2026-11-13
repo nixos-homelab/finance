@@ -6,7 +6,6 @@
   ...
 }:
 let
-  ccfg = config.homelab.cluster;
   cfg = config.homelab.homepage.integrations.actualbudget;
 in
 {
@@ -29,7 +28,7 @@ in
       services.Finance.actualbudget = {
         enable = lib.mkDefault true;
         icon = "actual-budget.png";
-        href = "https://actualbudget.${ccfg.domain}";
+        href = "https://actualbudget.${config.homelab.workloads.domain}";
         description = "Budgeting app";
       };
     };
