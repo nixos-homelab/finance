@@ -106,7 +106,7 @@ in
   };
   imports = [ inputs.setup-secrets.nixosModules.default ];
   config = lib.mkIf (cfg.enable && cfg.importSchedule != null && config.homelab.actualbudget.enable) {
-    services.k3s.images = [ ghostbudgetImage ];
+    homelab.cluster.images = [ ghostbudgetImage ];
     setup-secrets.destinations = [
       {
         logPrefix = "Ghostbudget (GHOSTFOLIO_TOKEN)";

@@ -15,7 +15,7 @@ in
   };
   imports = self.lib.importsApply [ ./homepage.nix ];
   config = lib.mkIf cfg.enable {
-    services.k3s.images = builtins.attrValues images;
+    homelab.cluster.images = builtins.attrValues images;
     homelab.cluster.backup.volumes.actualbudget.actualbudget = [ "/" ];
     homelab.kubernetes.submodules.instances.actualbudget = {
       submodule = "workload";

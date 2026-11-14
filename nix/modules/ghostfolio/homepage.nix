@@ -66,7 +66,7 @@ in
       };
       envFrom = [ { secretRef.name = "ghostfolio-api-token"; } ];
     };
-    services.k3s.manifests.homepage-refresh-ghostfolio-api-token-static.source = ./homepage.yaml;
+    homelab.cluster.manifests.homepage-refresh-ghostfolio-api-token-static.source = ./homepage.yaml;
     # In the manifest of ghostfolio, as before
     homelab.kubernetes.submodules.instances.ghostfolio.config.submodules.instances = {
       create-ghostfolio-api-token = {
