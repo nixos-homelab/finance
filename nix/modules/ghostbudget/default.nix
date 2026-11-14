@@ -114,80 +114,78 @@ in
         cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret ghostfolio ghostfolio-token GHOSTFOLIO_TOKEN "''${GHOSTFOLIO_TOKEN:?}"'';
       }
     ];
-    homelab.kubernetes.submodules.instances.ghostbudget = {
-      submodule = "manifest";
-      config = {
-        kubernetes.namespace = "ghostfolio";
-        kubernetes.resources = {
-          configMaps.ghostbudget = {
-            metadata.labels."app.kubernetes.io/name" = "ghostbudget";
-            data."config.json" = builtins.toJSON {
-              accounts = lib.mapAttrsToList (
-                actualBudgetName: config:
-                {
-                  actualBudgetName = actualBudgetName;
-                }
-                // (
-                  if builtins.isAttrs config then
-                    {
-                      ghostfolioName = config.ghostfolioName;
-                    }
-                    // lib.optionalAttrs (config.factor != null) { inherit (config) factor; }
-                  else
-                    { ghostfolioName = config; }
-                )
-              ) cfg.actualBudgetSyncMap;
-            };
-          };
-          persistentVolumeClaims.ghostbudget.spec = {
-            accessModes = [ "ReadWriteOnce" ];
-            resources.requests.storage = "1Gi";
-            volumeMode = "Filesystem";
+    # In the manifest of ghostfolio, with the namespace: k3s applies manifests in the order of their names, and a
+    # `ghostbudget` came before it
+    homelab.kubernetes.submodules.instances.ghostfolio.config = {
+      kubernetes.resources = {
+        configMaps.ghostbudget = {
+          metadata.labels."app.kubernetes.io/name" = "ghostbudget";
+          data."config.json" = builtins.toJSON {
+            accounts = lib.mapAttrsToList (
+              actualBudgetName: config:
+              {
+                actualBudgetName = actualBudgetName;
+              }
+              // (
+                if builtins.isAttrs config then
+                  {
+                    ghostfolioName = config.ghostfolioName;
+                  }
+                  // lib.optionalAttrs (config.factor != null) { inherit (config) factor; }
+                else
+                  { ghostfolioName = config; }
+              )
+            ) cfg.actualBudgetSyncMap;
           };
         };
-        submodules.instances.sync-accounts = {
-          submodule = "cronjob";
-          args = {
-            schedule = cfg.importSchedule;
-            allowEgress = [
-              "ghostfolio"
-              "actualbudget"
-            ];
-            container = {
-              image = "${ghostbudgetImage.buildArgs.name}:${ghostbudgetImage.imageTag}";
-              imagePullPolicy = "Never";
-              args = [ "import" ];
-              env = {
-                ACTUAL_BUDGET_URL.value = "http://actualbudget.actualbudget:5006";
-                ACTUAL_BUDGET_PASS.value = "actual";
-                ACTUAL_BUDGET_SYNC_ID.value = cfg.actualBudgetSyncId;
-                # Not the actual Actual Budget data dir, this is just for the api library
-                ACTUAL_BUDGET_DATA_DIR.value = "/data";
-                GHOSTFOLIO_URL.value = "http://ghostfolio.ghostfolio:3333";
-                GHOSTFOLIO_TOKEN.valueFrom.secretKeyRef = {
-                  name = "ghostfolio-token";
-                  key = "GHOSTFOLIO_TOKEN";
-                };
+        persistentVolumeClaims.ghostbudget.spec = {
+          accessModes = [ "ReadWriteOnce" ];
+          resources.requests.storage = "1Gi";
+          volumeMode = "Filesystem";
+        };
+      };
+      submodules.instances.sync-accounts = {
+        submodule = "cronjob";
+        args = {
+          schedule = cfg.importSchedule;
+          allowEgress = [
+            "ghostfolio"
+            "actualbudget"
+          ];
+          container = {
+            image = "${ghostbudgetImage.buildArgs.name}:${ghostbudgetImage.imageTag}";
+            imagePullPolicy = "Never";
+            args = [ "import" ];
+            env = {
+              ACTUAL_BUDGET_URL.value = "http://actualbudget.actualbudget:5006";
+              ACTUAL_BUDGET_PASS.value = "actual";
+              ACTUAL_BUDGET_SYNC_ID.value = cfg.actualBudgetSyncId;
+              # Not the actual Actual Budget data dir, this is just for the api library
+              ACTUAL_BUDGET_DATA_DIR.value = "/data";
+              GHOSTFOLIO_URL.value = "http://ghostfolio.ghostfolio:3333";
+              GHOSTFOLIO_TOKEN.valueFrom.secretKeyRef = {
+                name = "ghostfolio-token";
+                key = "GHOSTFOLIO_TOKEN";
               };
-              volumeMounts = {
-                "/config.json" = {
-                  name = "config";
-                  subPath = "config.json";
-                };
-                "/data".name = "data";
-                "/logs".name = "log";
+            };
+            volumeMounts = {
+              "/config.json" = {
+                name = "config";
+                subPath = "config.json";
               };
+              "/data".name = "data";
+              "/logs".name = "log";
             };
           };
-          # Labeled as the ConfigMap, not after the CronJob
-          config.kubernetes.resources.cronJobs.sync-accounts = {
-            metadata.labels."app.kubernetes.io/name" = lib.mkForce "ghostbudget";
-            spec.jobTemplate.spec.template.metadata.labels."app.kubernetes.io/name" = lib.mkForce "ghostbudget";
-            spec.jobTemplate.spec.template.spec.volumes = {
-              config.configMap.name = "ghostbudget";
-              data.persistentVolumeClaim.claimName = "ghostbudget";
-              log.emptyDir = { };
-            };
+        };
+        # Labeled as the ConfigMap, not after the CronJob
+        config.kubernetes.resources.cronJobs.sync-accounts = {
+          metadata.labels."app.kubernetes.io/name" = lib.mkForce "ghostbudget";
+          spec.jobTemplate.spec.template.metadata.labels."app.kubernetes.io/name" = lib.mkForce "ghostbudget";
+          spec.jobTemplate.spec.template.spec.volumes = {
+            config.configMap.name = "ghostbudget";
+            data.persistentVolumeClaim.claimName = "ghostbudget";
+            log.emptyDir = { };
           };
         };
       };

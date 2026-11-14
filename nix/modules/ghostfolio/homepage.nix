@@ -7,6 +7,7 @@
 }:
 let
   hllib = inputs.homelab-shared.lib;
+  kubelib = inputs.kube-generators.lib { inherit pkgs; };
   container-utils = inputs.homelab-shared.packages.${pkgs.stdenv.hostPlatform.system}.container-utils;
   refreshGhostfolioAPIToken = ''
     #!/usr/bin/env bash
@@ -66,7 +67,11 @@ in
       };
       envFrom = [ { secretRef.name = "ghostfolio-api-token"; } ];
     };
-    homelab.cluster.manifests.homepage-refresh-ghostfolio-api-token-static.source = ./homepage.yaml;
+    # In the manifest of homepage, with the namespace: k3s applies manifests in the order of their names, and a
+    # `homepage-refresh-ghostfolio-api-token-static` came before it
+    homelab.kubernetes.submodules.instances.homepage.config.kubernetes.objects = kubelib.fromYAML (
+      builtins.readFile ./homepage.yaml
+    );
     # In the manifest of ghostfolio, as before
     homelab.kubernetes.submodules.instances.ghostfolio.config.submodules.instances = {
       create-ghostfolio-api-token = {
