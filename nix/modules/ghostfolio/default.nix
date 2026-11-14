@@ -27,8 +27,8 @@ in
   };
   imports = [
     inputs.setup-secrets.nixosModules.default
-    inputs.homelab-shared.nixosModules.postgresql
-    inputs.homelab-shared.nixosModules.redis
+    inputs.homelab-storage.nixosModules.postgresql
+    inputs.homelab-storage.nixosModules.redis
   ]
   ++ self.lib.importsApply [ ./homepage.nix ];
   # TODO: Add tini
