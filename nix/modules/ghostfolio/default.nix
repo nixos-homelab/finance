@@ -31,7 +31,6 @@ in
     inputs.homelab-storage.nixosModules.redis
   ]
   ++ self.lib.importsApply [ ./homepage.nix ];
-  # TODO: Add tini
   config = lib.mkIf cfg.enable {
     homelab.cluster.images = builtins.attrValues images;
     homelab.postgresql.databases.ghostfolio.backup.enable = lib.mkDefault true;
@@ -101,6 +100,9 @@ in
             readinessProbe.httpGet.port = "web";
           };
         };
+        # The image runs node as PID 1 of the container, where SIGTERM does nothing without a handler, and ghostfolio
+        # has none: it was killed at the end of the grace period. With the pause container as PID 1 SIGTERM ends it
+        config.kubernetes.resources.deployments.ghostfolio.spec.template.spec.shareProcessNamespace = true;
       };
     };
   };
