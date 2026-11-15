@@ -75,16 +75,14 @@ in
     };
     actualBudgetSyncMap = lib.mkOption {
       description = "Map of Actual Budget account names to Ghostfolio account names, use an attrSet for extended options";
-      example = ''
-        {
-          ActualBudgetAccountName = "GhostfolioAccountName";
-          Cash = "Liquid Assets";
-          Investments = {
-            ghostfolioName = "Liquid Assets";
-            factor = 7.45;
-          };
-        }
-      '';
+      example = {
+        ActualBudgetAccountName = "GhostfolioAccountName";
+        Cash = "Liquid Assets";
+        Investments = {
+          ghostfolioName = "Liquid Assets";
+          factor = 7.45;
+        };
+      };
       type = lib.types.attrsOf (
         lib.types.either lib.types.str (
           lib.types.submodule {
