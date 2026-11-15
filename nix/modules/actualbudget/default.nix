@@ -14,6 +14,7 @@ in
     enable = lib.mkEnableOption "Actual Budget";
   };
   imports = self.lib.importsApply [
+    ./grafana.nix
     ./homepage.nix
     ./metrics.nix
   ];
