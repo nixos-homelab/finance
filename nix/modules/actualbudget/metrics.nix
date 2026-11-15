@@ -40,8 +40,6 @@ in
     # podPort, so Alloy reaches the exporter's port alone
     homelab.alloy.monitors.actualbudget = {
       podPort = port;
-      # Its instance is a workload, which can't hold the policy (kubenix nesting): a manifest of its own
-      manifest = null;
       endpoint = {
         interval = "2m";
         scrapeTimeout = "1m";
