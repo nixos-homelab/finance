@@ -59,62 +59,66 @@ in
     description = ''
       Budgets whose balances [actual-budget-prometheus-exporter](https://github.com/sakowicz/actual-budget-prometheus-exporter)
       exports, by the name in their `budget` label, each the sync ID of the budget (Settings, Advanced settings).
-      Without any, no exporter runs. End-to-end encrypted budgets aren't supported.
+      Without any, or while Alloy is off, no exporter runs. End-to-end encrypted budgets aren't supported.
     '';
     type = lib.types.attrsOf lib.types.str;
     default = { };
     example.main = "bba4b622-c8d1-4bdb-84d0-a8ecfb240ca8";
   };
   config = lib.mkIf (cfg.enable && cfg.exporter.budgets != { }) {
-    homelab.cluster.images = [ image ];
     # Every scrape downloads the budgets and walks all their transactions: not every minute. Balances are sensitive,
     # only Alloy gets the egress label that lets it in.
-    homelab.alloy.monitors.${name} = {
-      namespace = "actualbudget";
-      endpoint = {
-        interval = "2m";
-        scrapeTimeout = "1m";
-      };
+    homelab.alloy.monitors.${name}.endpoint = {
+      interval = "2m";
+      scrapeTimeout = "1m";
     };
-    # In the manifest of actualbudget, with the namespace
-    homelab.kubernetes.submodules.instances.actualbudget.config.submodules.instances = {
-      ${name} = {
-        submodule = "deployment";
-        args = {
-          allowEgress = [ "actualbudget" ];
-          ports.metrics = port;
-          container = {
-            image = "${image.buildArgs.name}:${image.imageTag}";
-            imagePullPolicy = "Never";
-            env = {
-              PORT.value = toString port;
-              ACTUAL_SERVER_URL.value = "http://actualbudget.actualbudget:5006";
-              # The password the HTTPRoute of actualbudget logs in with, as ghostbudget does
-              ACTUAL_PASSWORD.value = "actual";
-            }
-            # Numbered from 1, the exporter reads them until the first missing ID
-            // lib.listToAttrs (
-              lib.concatLists (
-                lib.imap1 (i: budget: [
-                  (lib.nameValuePair "ACTUAL_BUDGET_ID_${toString i}" { value = cfg.exporter.budgets.${budget}; })
-                  (lib.nameValuePair "ACTUAL_BUDGET_NAME_${toString i}" { value = budget; })
-                ]) (lib.attrNames cfg.exporter.budgets)
-              )
-            );
-            # /metrics fetches the budgets, every other path is a 404
-            livenessProbe.tcpSocket.port = "metrics";
-            readinessProbe.tcpSocket.port = "metrics";
-            # The API library keeps the downloaded budgets in /tmp/actual-budget-prometheus-exporter
-            volumeMounts."/tmp".name = "tmp";
+    homelab.cluster.images = lib.mkIf config.homelab.alloy.enable [ image ];
+    # A namespace of its own: a manifest sorting before actualbudget's would wait for that namespace on k3s' second pass
+    homelab.kubernetes.submodules.instances.${name} = lib.mkIf config.homelab.alloy.enable {
+      submodule = "manifest";
+      config = {
+        # Cluster-scoped: no namespace, which kubenix gives every object by default
+        kubernetes.resources.namespaces.${name}.metadata.namespace = null;
+        submodules.instances = {
+          ${name} = {
+            submodule = "deployment";
+            args = {
+              allowEgress = [ "actualbudget" ];
+              ports.metrics = port;
+              container = {
+                image = "${image.buildArgs.name}:${image.imageTag}";
+                imagePullPolicy = "Never";
+                env = {
+                  PORT.value = toString port;
+                  ACTUAL_SERVER_URL.value = "http://actualbudget.actualbudget:5006";
+                  # The password the HTTPRoute of actualbudget logs in with, as ghostbudget does
+                  ACTUAL_PASSWORD.value = "actual";
+                }
+                # Numbered from 1, the exporter reads them until the first missing ID
+                // lib.listToAttrs (
+                  lib.concatLists (
+                    lib.imap1 (i: budget: [
+                      (lib.nameValuePair "ACTUAL_BUDGET_ID_${toString i}" { value = cfg.exporter.budgets.${budget}; })
+                      (lib.nameValuePair "ACTUAL_BUDGET_NAME_${toString i}" { value = budget; })
+                    ]) (lib.attrNames cfg.exporter.budgets)
+                  )
+                );
+                # /metrics fetches the budgets, every other path is a 404
+                livenessProbe.tcpSocket.port = "metrics";
+                readinessProbe.tcpSocket.port = "metrics";
+                # The API library keeps the downloaded budgets in /tmp/actual-budget-prometheus-exporter
+                volumeMounts."/tmp".name = "tmp";
+              };
+            };
+            config.kubernetes.resources.deployments.${name}.spec.template.spec.volumes.tmp.emptyDir = { };
+          };
+          # A key apart from the Deployment instance, the same object name
+          "${name}-service" = {
+            inherit name;
+            submodule = "service";
+            args.ports.metrics = port;
           };
         };
-        config.kubernetes.resources.deployments.${name}.spec.template.spec.volumes.tmp.emptyDir = { };
-      };
-      # A key apart from the Deployment instance, the same object name
-      "${name}-service" = {
-        inherit name;
-        submodule = "service";
-        args.ports.metrics = port;
       };
     };
   };

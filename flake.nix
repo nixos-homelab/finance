@@ -91,6 +91,8 @@
               modules = lib.attrValues self.nixosModules ++ [
                 {
                   homelab = {
+                    # Renders the monitors and the exporters they scrape
+                    alloy.enable = true;
                     actualbudget = {
                       enable = true;
                       exporter.budgets.main = "00000000-0000-0000-0000-000000000000";

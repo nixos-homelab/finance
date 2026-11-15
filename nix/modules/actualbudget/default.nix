@@ -14,66 +14,63 @@ in
     enable = lib.mkEnableOption "Actual Budget";
   };
   imports = self.lib.importsApply [
-    ./exporter.nix
     ./homepage.nix
+    ./metrics.nix
   ];
   config = lib.mkIf cfg.enable {
     homelab.cluster.images = builtins.attrValues images;
     homelab.cluster.backup.volumes.actualbudget.actualbudget = [ "/" ];
     homelab.kubernetes.submodules.instances.actualbudget = {
-      submodule = "manifest";
-      config.submodules.instances.actualbudget = {
-        submodule = "workload";
-        args = {
-          allowEgress = [ "internet" ];
-          dataPath = "/data";
-          ingressPort = 5006;
-          ports.web = 5006;
-          container = {
-            image = images."actualbudget/actual-server".ref;
-            imagePullPolicy = "Never";
-            env = {
-              ACTUAL_LOGIN_METHOD.value = "header";
-              ACTUAL_ALLOWED_LOGIN_METHODS.value = "header,password";
-              ACTUAL_TRUSTED_AUTH_PROXIES.value = "::/0,0.0.0.0/0";
-              ACTUAL_DATA_DIR.value = "/data";
-              ACTUAL_UPLOAD_FILE_SYNC_SIZE_LIMIT_MB.value = "512";
-              ACTUAL_UPLOAD_SYNC_ENCRYPTED_FILE_SYNC_SIZE_LIMIT_MB.value = "512";
-              ACTUAL_UPLOAD_FILE_SIZE_LIMIT_MB.value = "512";
-            };
-            livenessProbe.httpGet.port = "web";
-            readinessProbe.httpGet.port = "web";
+      submodule = "workload";
+      args = {
+        allowEgress = [ "internet" ];
+        dataPath = "/data";
+        ingressPort = 5006;
+        ports.web = 5006;
+        container = {
+          image = images."actualbudget/actual-server".ref;
+          imagePullPolicy = "Never";
+          env = {
+            ACTUAL_LOGIN_METHOD.value = "header";
+            ACTUAL_ALLOWED_LOGIN_METHODS.value = "header,password";
+            ACTUAL_TRUSTED_AUTH_PROXIES.value = "::/0,0.0.0.0/0";
+            ACTUAL_DATA_DIR.value = "/data";
+            ACTUAL_UPLOAD_FILE_SYNC_SIZE_LIMIT_MB.value = "512";
+            ACTUAL_UPLOAD_SYNC_ENCRYPTED_FILE_SYNC_SIZE_LIMIT_MB.value = "512";
+            ACTUAL_UPLOAD_FILE_SIZE_LIMIT_MB.value = "512";
           };
+          livenessProbe.httpGet.port = "web";
+          readinessProbe.httpGet.port = "web";
         };
-        # The catch-all rule of the workload, adding the password header login reads
-        config.kubernetes.resources.hTTPRoutes.actualbudget.spec.rules = lib.mkForce [
-          {
-            matches = [
-              {
-                path.type = "PathPrefix";
-                path.value = "/";
-              }
-            ];
-            backendRefs = [
-              {
-                name = "actualbudget";
-                port = 5006;
-              }
-            ];
-            filters = [
-              {
-                type = "RequestHeaderModifier";
-                requestHeaderModifier.add = [
-                  {
-                    name = "X-ACTUAL-PASSWORD";
-                    value = "actual";
-                  }
-                ];
-              }
-            ];
-          }
-        ];
       };
+      # The catch-all rule of the workload, adding the password header login reads
+      config.kubernetes.resources.hTTPRoutes.actualbudget.spec.rules = lib.mkForce [
+        {
+          matches = [
+            {
+              path.type = "PathPrefix";
+              path.value = "/";
+            }
+          ];
+          backendRefs = [
+            {
+              name = "actualbudget";
+              port = 5006;
+            }
+          ];
+          filters = [
+            {
+              type = "RequestHeaderModifier";
+              requestHeaderModifier.add = [
+                {
+                  name = "X-ACTUAL-PASSWORD";
+                  value = "actual";
+                }
+              ];
+            }
+          ];
+        }
+      ];
     };
   };
 }
