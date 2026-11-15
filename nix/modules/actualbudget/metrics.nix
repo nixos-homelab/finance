@@ -9,49 +9,8 @@ let
   cfg = config.homelab.actualbudget;
   name = "actualbudget-exporter";
   port = 3001;
-  nodejs = pkgs.nodejs_22;
-  nodejs-slim = pkgs.nodejs-slim_22;
-  exporter = pkgs.buildNpmPackage rec {
-    inherit nodejs;
-    pname = "actual-budget-prometheus-exporter";
-    version = "1.3.2";
-    src = pkgs.fetchFromGitHub {
-      owner = "sakowicz";
-      repo = pname;
-      rev = "b8b6ffaea71c0e819143ef4805b78e86cb722871";
-      hash = "sha256-vxDeTQo9jfEzj56niBdDTG3X7NpFYgjipfwTcI9YtAY=";
-    };
-    npmDepsHash = "sha256-7ss7xFANWMDQlgEvttgm18DQMYQY9kPJGf0qcCl3qCY=";
-    nativeBuildInputs = [ pkgs.python3 ];
-    # better-sqlite3 13 ships prebuilt addons and no install script: the addon from its sources instead, against
-    # this node, where the loader falls back to it without prebuilds
-    preBuild = ''
-      rm -r node_modules/better-sqlite3/prebuilds
-      npm run --prefix node_modules/better-sqlite3 build-release -- --nodedir=${nodejs}
-    '';
-    # `npm run build` (tsc) makes dist/
-    dontNpmInstall = true;
-    installPhase = ''
-      runHook preInstall
-      npm prune --omit=dev --no-save
-      # Keep only the compiled addon; the build tree references python3
-      find node_modules/better-sqlite3/build -type f ! -name better_sqlite3.node -delete
-      rm -r node_modules/better-sqlite3/{deps,src}
-      # The image only has nodejs-slim, without npm
-      grep -rlZ ${nodejs} node_modules | xargs -0 -r sed -i 's|${nodejs}|${nodejs-slim}|'
-      mkdir $out
-      cp -a node_modules dist $out
-      runHook postInstall
-    '';
-  };
-  image = pkgs.dockerTools.buildImage {
-    name = "cluster.local/${name}";
-    copyToRoot = [ nodejs-slim ];
-    config.Entrypoint = [
-      (lib.getExe nodejs-slim)
-      "${exporter}/dist/app.js"
-    ];
-  };
+  # The exporter's own image, pinned in the Dockerfile next to Actual's
+  image = (inputs.homelab-shared.lib.images.pinned pkgs ./Dockerfile)."sakowicz/actual-budget-prometheus-exporter";
 in
 {
   imports = [ inputs.homelab-monitoring.nixosModules.alloy ];
@@ -88,7 +47,7 @@ in
             metadata.annotations."kubectl.kubernetes.io/default-container" = "actualbudget";
             spec = {
               containers.${name} = {
-                image = "${image.buildArgs.name}:${image.imageTag}";
+                image = image.ref;
                 imagePullPolicy = "Never";
                 env = {
                   PORT.value = toString port;
