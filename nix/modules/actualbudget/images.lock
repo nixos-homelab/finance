@@ -1,3 +1,4 @@
 {
-  "actualbudget/actual-server@sha256:2b0ab7e5b29080926e19eee1fe4c31c0555e4bfd500aa5e35a4dcf216ce8f835": "sha256-8VdFudodkhmDh/dA7alWZ75CDMQHX8xYVJDe7ZA7rTk="
+  "actualbudget/actual-server@sha256:2b0ab7e5b29080926e19eee1fe4c31c0555e4bfd500aa5e35a4dcf216ce8f835": "sha256-8VdFudodkhmDh/dA7alWZ75CDMQHX8xYVJDe7ZA7rTk=",
+  "sakowicz/actual-budget-prometheus-exporter@sha256:1879be5b485bd000a7700f26d99f842edb69b6318a7bdaed3d1db96a6651b1e8": "sha256-jcPulUVuEg9iIeS/6EXtw4PmQvVl/phx+u62JlWzIzI="
 }

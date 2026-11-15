@@ -18,7 +18,7 @@ in
     ./metrics.nix
   ];
   config = lib.mkIf cfg.enable {
-    homelab.cluster.images = builtins.attrValues images;
+    homelab.cluster.images = [ images."actualbudget/actual-server" ];
     homelab.cluster.backup.volumes.actualbudget.actualbudget = [ "/" ];
     homelab.kubernetes.submodules.instances.actualbudget = {
       submodule = "workload";

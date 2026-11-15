@@ -1,1 +1,2 @@
 FROM actualbudget/actual-server:sha-25d0729-alpine@sha256:2b0ab7e5b29080926e19eee1fe4c31c0555e4bfd500aa5e35a4dcf216ce8f835
+FROM sakowicz/actual-budget-prometheus-exporter:1.3.2@sha256:1879be5b485bd000a7700f26d99f842edb69b6318a7bdaed3d1db96a6651b1e8
