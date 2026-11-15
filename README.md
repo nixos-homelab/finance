@@ -32,7 +32,9 @@ For the full list of module options, see [the options reference](https://nixos-h
 ## Modules
 
 - **actualbudget**: [Actual Budget](https://actualbudget.org), envelope
-  budgeting.
+  budgeting. With `exporter.budgets` set, account and category balances go
+  to Alloy through
+  [actual-budget-prometheus-exporter](https://github.com/sakowicz/actual-budget-prometheus-exporter).
 - **actual-flow**: syncs transactions from [Lunchflow](https://www.lunchflow.app)
   into Actual Budget accounts on a schedule.
 - **ghostfolio**: [Ghostfolio](https://ghostfol.io), portfolio and net

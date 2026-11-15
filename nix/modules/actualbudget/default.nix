@@ -13,7 +13,10 @@ in
   options.homelab.actualbudget = {
     enable = lib.mkEnableOption "Actual Budget";
   };
-  imports = self.lib.importsApply [ ./homepage.nix ];
+  imports = self.lib.importsApply [
+    ./exporter.nix
+    ./homepage.nix
+  ];
   config = lib.mkIf cfg.enable {
     homelab.cluster.images = builtins.attrValues images;
     homelab.cluster.backup.volumes.actualbudget.actualbudget = [ "/" ];

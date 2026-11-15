@@ -91,7 +91,10 @@
               modules = lib.attrValues self.nixosModules ++ [
                 {
                   homelab = {
-                    actualbudget.enable = true;
+                    actualbudget = {
+                      enable = true;
+                      exporter.budgets.main = "00000000-0000-0000-0000-000000000000";
+                    };
                     ghostfolio = {
                       enable = true;
                       importSchedule = "5 3 * * *";
