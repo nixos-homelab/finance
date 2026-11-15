@@ -10,21 +10,32 @@ let
   name = "actualbudget-exporter";
   port = 3001;
   # The exporter's own image, pinned in the Dockerfile next to Actual's
-  image = (inputs.homelab-shared.lib.images.pinned pkgs ./Dockerfile)."sakowicz/actual-budget-prometheus-exporter";
+  image =
+    (inputs.homelab-shared.lib.images.pinned pkgs ./Dockerfile)
+    ."sakowicz/actual-budget-prometheus-exporter";
 in
 {
   imports = [ inputs.homelab-monitoring.nixosModules.alloy ];
+  options.homelab.actualbudget.metrics.enable = lib.mkOption {
+    description = ''
+      Whether Alloy scrapes Actual Budget's metrics, and runs its exporter sidecar for the budgets in
+      `exporter.budgets`. Off by default for privacy: the metrics are account and category balances, which land in
+      Mimir for every Grafana user to query.
+    '';
+    type = lib.types.bool;
+    default = false;
+  };
   options.homelab.actualbudget.exporter.budgets = lib.mkOption {
     description = ''
       Budgets whose balances [actual-budget-prometheus-exporter](https://github.com/sakowicz/actual-budget-prometheus-exporter)
       exports, by the name in their `budget` label, each the sync ID of the budget (Settings, Advanced settings).
-      Without any, or while Alloy is off, no exporter runs. End-to-end encrypted budgets aren't supported.
+      Without any, with `metrics.enable` off or while Alloy is off, no exporter runs. End-to-end encrypted budgets aren't supported.
     '';
     type = lib.types.attrsOf lib.types.str;
     default = { };
     example.main = "bba4b622-c8d1-4bdb-84d0-a8ecfb240ca8";
   };
-  config = lib.mkIf (cfg.enable && cfg.exporter.budgets != { }) {
+  config = lib.mkIf (cfg.enable && cfg.metrics.enable && cfg.exporter.budgets != { }) {
     # Every scrape downloads the budgets and walks all their transactions: not every minute. Balances are sensitive:
     # podPort, so Alloy reaches the exporter's port alone
     homelab.alloy.monitors.actualbudget = {
