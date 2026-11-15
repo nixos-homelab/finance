@@ -4,7 +4,7 @@ Personal finance apps on top of [nixos-homelab](https://github.com/nixos-homelab
 budgeting and portfolio tracking, plus companion services that keep them
 in sync with each other and with external data sources.
 
-For the full list of module options, see [the options reference](https://nixos-homelab.github.io/finance/options/).
+For the full list of module options, see [the documentation](https://nixos-homelab.github.io/finance/), under Options.
 
 ## Setup
 
