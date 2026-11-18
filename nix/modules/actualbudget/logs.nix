@@ -39,7 +39,7 @@ in
               }
               {
                 message = "Logging in via password";
-                level = "unknown";
+                level = "info";
               }
             ];
           }
@@ -60,7 +60,7 @@ in
             expect = [
               {
                 message = "Budget downloaded";
-                level = "unknown";
+                level = "info";
               }
               {
                 message = lib.concatStringsSep "\n" [
@@ -68,11 +68,11 @@ in
                   "  message: 'Loading budget /tmp/actual-budget-prometheus-exporter/c1ec9d6d'"
                   "}"
                 ];
-                level = "unknown";
+                level = "info";
               }
               {
                 message = "Loaded spreadsheet from cache (60770 items)";
-                level = "unknown";
+                level = "info";
               }
             ];
           }
