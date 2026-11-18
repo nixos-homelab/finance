@@ -16,6 +16,7 @@ in
   imports = self.lib.importsApply [
     ./grafana.nix
     ./homepage.nix
+    ./logs.nix
     ./metrics.nix
   ];
   config = lib.mkIf cfg.enable {

@@ -81,6 +81,29 @@
         };
         perSystem =
           { pkgs, lib, ... }:
+          let
+            # Every module of this flake on
+            testModules = lib.attrValues self.nixosModules ++ [
+              {
+                homelab = {
+                  # Renders the monitors and the exporters they scrape
+                  alloy.enable = true;
+                  actualbudget = {
+                    enable = true;
+                    metrics.enable = true;
+                    exporter.budgets.main = "00000000-0000-0000-0000-000000000000";
+                  };
+                  ghostfolio = {
+                    enable = true;
+                    importSchedule = "5 3 * * *";
+                    actualBudgetSyncId = "00000000-0000-0000-0000-000000000000";
+                    actualBudgetSyncMap.Checking = "Checking";
+                  };
+                  homepage.enable = true;
+                };
+              }
+            ];
+          in
           {
             # Dead Nix code. Pattern names stay: modules take { config, lib, pkgs, ... } whether they use them or not
             checks.deadnix = pkgs.runCommand "deadnix" { nativeBuildInputs = [ pkgs.deadnix ]; } ''
@@ -89,26 +112,12 @@
             '';
             checks.manifests = inputs.homelab-shared.lib.checks.manifests {
               inherit pkgs;
-              modules = lib.attrValues self.nixosModules ++ [
-                {
-                  homelab = {
-                    # Renders the monitors and the exporters they scrape
-                    alloy.enable = true;
-                    actualbudget = {
-                      enable = true;
-                      metrics.enable = true;
-                      exporter.budgets.main = "00000000-0000-0000-0000-000000000000";
-                    };
-                    ghostfolio = {
-                      enable = true;
-                      importSchedule = "5 3 * * *";
-                      actualBudgetSyncId = "00000000-0000-0000-0000-000000000000";
-                      actualBudgetSyncMap.Checking = "Checking";
-                    };
-                    homepage.enable = true;
-                  };
-                }
-              ];
+              modules = testModules;
+            };
+            # The parsers of this flake's workloads on their examples, through the pinned Alloy and Loki
+            checks.logs = inputs.homelab-monitoring.lib.logs.check {
+              inherit pkgs;
+              modules = testModules;
             };
             packages = {
               options-docs = inputs.docs.lib.docs.options {
