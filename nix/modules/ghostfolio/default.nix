@@ -30,7 +30,10 @@ in
     inputs.homelab-storage.nixosModules.postgresql
     inputs.homelab-storage.nixosModules.redis
   ]
-  ++ self.lib.importsApply [ ./homepage.nix ];
+  ++ self.lib.importsApply [
+    ./homepage.nix
+    ./logs.nix
+  ];
   config = lib.mkIf cfg.enable {
     homelab.cluster.images = builtins.attrValues images;
     homelab.postgresql.databases.ghostfolio.backup.enable = lib.mkDefault true;
