@@ -46,7 +46,7 @@ in
             expect = [
               {
                 message = "[dotenv@17.2.3] injecting env (0) from .env -- tip: enable debug logging with { debug: true }";
-                level = "unknown";
+                level = "info";
               }
               {
                 message = "Starting sync process...";
@@ -54,7 +54,7 @@ in
               }
               {
                 message = "[Breadcrumb] { message: 'loading spreadsheet', category: 'server' }";
-                level = "unknown";
+                level = "info";
               }
             ];
           }
