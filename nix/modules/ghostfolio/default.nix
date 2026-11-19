@@ -31,6 +31,7 @@ in
     inputs.homelab-storage.nixosModules.redis
   ]
   ++ self.lib.importsApply [
+    ./home-area.nix
     ./homepage.nix
     ./logs.nix
   ];
