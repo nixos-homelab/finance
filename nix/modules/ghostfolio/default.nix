@@ -10,16 +10,14 @@ let
   cfg = config.homelab.ghostfolio;
   hllib = inputs.homelab-shared.lib;
   # Generated only when the Secret is missing, never when the API call fails
-  secretSource = description: field: {
-    inherit description;
-    cmd = hllib.setup-secrets.mkScript pkgs ''
-      if [[ -n $(kubectl -n ghostfolio get secret ghostfolio-secrets --ignore-not-found -oname) ]]; then
-        getKubeSecret ghostfolio ghostfolio-secrets ${field}
-      else
-        head -c 1024 /dev/urandom | tr -dc A-Za-z0-9 | head -c 64
-      fi
-    '';
-  };
+  secretSource =
+    description: field:
+    hllib.setup-secrets.kubeSecretSource pkgs {
+      inherit description field;
+      namespace = "ghostfolio";
+      name = "ghostfolio-secrets";
+      generate = "head -c 1024 /dev/urandom | tr -dc A-Za-z0-9 | head -c 64";
+    };
 in
 {
   options.homelab.ghostfolio = {
@@ -49,25 +47,24 @@ in
       }
     ];
     setup-secrets = {
-      sources.GHOSTFOLIO_TOKEN = {
+      sources.GHOSTFOLIO_TOKEN = hllib.setup-secrets.kubeSecretSource pkgs {
         description = "Ghostfolio Token";
-        cmd = hllib.setup-secrets.mkScript pkgs "getKubeSecret ghostfolio ghostfolio-token GHOSTFOLIO_TOKEN";
+        namespace = "ghostfolio";
+        name = "ghostfolio-token";
+        field = "GHOSTFOLIO_TOKEN";
       };
       sources.GHOSTFOLIO_ACCESS_TOKEN_SALT = secretSource "Ghostfolio Access Token Salt" "ACCESS_TOKEN_SALT";
       sources.GHOSTFOLIO_JWT_SECRET_KEY = secretSource "Ghostfolio JWT Secret Key" "JWT_SECRET_KEY";
       destinations = [
-        {
+        (hllib.setup-secrets.kubeSecretDestination pkgs {
           logPrefix = "Ghostfolio (ACCESS_TOKEN_SALT & JWT_SECRET_KEY)";
-          requires = [
-            "GHOSTFOLIO_ACCESS_TOKEN_SALT"
-            "GHOSTFOLIO_JWT_SECRET_KEY"
-          ];
-          cmd = hllib.setup-secrets.mkScript pkgs ''
-            setKubeSecret ghostfolio ghostfolio-secrets \
-              ACCESS_TOKEN_SALT "''${GHOSTFOLIO_ACCESS_TOKEN_SALT:?}" \
-              JWT_SECRET_KEY "''${GHOSTFOLIO_JWT_SECRET_KEY:?}"
-          '';
-        }
+          namespace = "ghostfolio";
+          name = "ghostfolio-secrets";
+          data = {
+            ACCESS_TOKEN_SALT = "GHOSTFOLIO_ACCESS_TOKEN_SALT";
+            JWT_SECRET_KEY = "GHOSTFOLIO_JWT_SECRET_KEY";
+          };
+        })
       ];
     };
     homelab.redis.databases.ghostfolio = lib.mkDefault "0";
