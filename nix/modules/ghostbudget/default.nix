@@ -106,11 +106,12 @@ in
   config = lib.mkIf (cfg.enable && cfg.importSchedule != null && config.homelab.actualbudget.enable) {
     homelab.cluster.images = [ ghostbudgetImage ];
     setup-secrets.destinations = [
-      {
+      (hllib.setup-secrets.kubeSecretDestination pkgs {
         logPrefix = "Ghostbudget (GHOSTFOLIO_TOKEN)";
-        requires = [ "GHOSTFOLIO_TOKEN" ];
-        cmd = hllib.setup-secrets.mkScript pkgs ''setKubeSecret ghostfolio ghostfolio-token GHOSTFOLIO_TOKEN "''${GHOSTFOLIO_TOKEN:?}"'';
-      }
+        namespace = "ghostfolio";
+        name = "ghostfolio-token";
+        data.GHOSTFOLIO_TOKEN = "GHOSTFOLIO_TOKEN";
+      })
     ];
     # In the manifest of ghostfolio, with the namespace: k3s applies manifests in the order of their names, and a
     # `ghostbudget` came before it
