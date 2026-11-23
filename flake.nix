@@ -28,6 +28,7 @@
       inputs.setup-secrets.follows = "setup-secrets";
       inputs.kube-generators.follows = "kube-generators";
       inputs.homelab-shared.follows = "homelab-shared";
+      inputs.homelab-monitoring.follows = "homelab-monitoring";
       inputs.docs.follows = "docs";
     };
     homelab-monitoring = {
@@ -105,6 +106,11 @@
             ];
           in
           {
+            # One lock node per homelab repo
+            checks.flake-lock = inputs.homelab-shared.lib.checks.flakeLock {
+              inherit pkgs;
+              lockFile = ./flake.lock;
+            };
             # Dead Nix code. Pattern names stay: modules take { config, lib, pkgs, ... } whether they use them or not
             checks.deadnix = pkgs.runCommand "deadnix" { nativeBuildInputs = [ pkgs.deadnix ]; } ''
               deadnix --fail --no-lambda-pattern-names ${self}
