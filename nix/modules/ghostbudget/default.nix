@@ -14,26 +14,32 @@ let
   ghostbudget = pkgs.buildNpmPackage rec {
     inherit nodejs;
     name = "ghostbudget";
-    version = "0.0.14";
+    version = "0.0.15";
     src = pkgs.fetchFromGitHub {
       repo = name;
       owner = "andsens";
-      rev = "783b1d33ce6781b733ac0fa513a0d4dc80de51a6";
-      hash = "sha256-5KVzm0zmtX3bVmWHdT3VFFzPlB81aqNb2Lem5IuWC/Y=";
+      rev = "11d3578021aa4a550534a6240826bae0c1faf513";
+      hash = "sha256-fPzfNTaO/ybWzF6iKaYRBi4RZNYufhkCdle59Bnw+yU=";
     };
     npmDeps = pkgs.fetchNpmDeps {
       inherit nodejs src;
       name = "${name}-rawdeps";
-      hash = "sha256-4Z8tExCLer9SfKAHwgr5GhtqI1q2j35tAeV0DE17QbI=";
+      hash = "sha256-Ohs9+7i+YNjzBS37n1oKcBvVw/JpSbxYdtSuqRFyxNE=";
     };
+    nativeBuildInputs = [ pkgs.python3 ];
     dontNpmInstall = true;
-    dontNpmBuild = true;
+    # better-sqlite3 ships prebuilt addons and no install script; build/Release takes precedence over them
+    buildPhase = ''
+      runHook preBuild
+      (cd node_modules/better-sqlite3 && npm run build-release)
+      runHook postBuild
+    '';
     installPhase = ''
       runHook preInstall
       npm prune --omit=dev --no-save
       # Keep only the compiled addon; the build tree references python3
       find node_modules/better-sqlite3/build -type f ! -name better_sqlite3.node -delete
-      rm -r node_modules/better-sqlite3/{deps,src}
+      rm -r node_modules/better-sqlite3/{deps,src,prebuilds}
       # The image only has nodejs-slim, without npm
       grep -rlZ ${nodejs} node_modules | xargs -0 sed -i 's|${nodejs}|${nodejs-slim}|'
       mkdir $out
