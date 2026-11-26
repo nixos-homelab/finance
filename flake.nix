@@ -78,6 +78,7 @@
             ghostbudget = importApply ./nix/modules/ghostbudget { inherit self inputs; };
             ghostfolio = importApply ./nix/modules/ghostfolio { inherit self inputs; };
             homepage = importApply ./nix/modules/homepage { inherit self inputs; };
+            saxo-sync = importApply ./nix/modules/saxo-sync { inherit self inputs; };
           };
         };
         perSystem =
@@ -103,6 +104,20 @@
                     importSchedule = "5 3 * * *";
                     actualBudgetSyncId = "00000000-0000-0000-0000-000000000000";
                     actualBudgetSyncMap.Checking = "Checking";
+                    saxo = {
+                      enable = true;
+                      dryRun = true;
+                      appKey = "0123456789abcdef0123456789abcdef";
+                      redirectUri = "https://example.org/saxo";
+                      accounts = [
+                        {
+                          saxoAccountId = "123456INET";
+                          ghostfolioName = "Brokerage";
+                          importFrom = "2026-01-01";
+                        }
+                      ];
+                      symbols.DK0062498333 = "NOVO-B.CO";
+                    };
                   };
                   homepage.enable = true;
                 };
@@ -130,6 +145,8 @@
               modules = testModules;
             };
             packages = {
+              saxo-sync = pkgs.callPackage ./nix/modules/saxo-sync/package.nix { };
+              saxo-login = pkgs.callPackage ./nix/modules/saxo-sync/login.nix { };
               options-docs = inputs.docs.lib.docs.options {
                 inherit pkgs;
                 modules = lib.attrValues self.nixosModules;
@@ -145,6 +162,7 @@
                     "homelab.homepage.integrations.ghostfolio"
                   ];
                   homepage = [ "homelab.homepage.sections" ];
+                  saxo-sync = [ "homelab.ghostfolio.saxo" ];
                 };
               };
               manual-docs = inputs.docs.lib.mkdocs.manual {
