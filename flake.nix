@@ -93,6 +93,10 @@
                     enable = true;
                     metrics.enable = true;
                     exporter.budgets.main = "00000000-0000-0000-0000-000000000000";
+                    bankSync = {
+                      schedule = "15 6,12,18 * * *";
+                      budgetSyncId = "00000000-0000-0000-0000-000000000000";
+                    };
                   };
                   ghostfolio = {
                     enable = true;

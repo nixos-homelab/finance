@@ -35,8 +35,6 @@ For the full list of module options, see [the documentation](https://nixos-homel
   budgeting. With `metrics.enable` (off by default, for privacy) and
   `exporter.budgets` set, account and category balances go to Alloy through
   [actual-budget-prometheus-exporter](https://github.com/sakowicz/actual-budget-prometheus-exporter).
-- **actual-flow**: syncs transactions from [Lunchflow](https://www.lunchflow.app)
-  into Actual Budget accounts on a schedule.
 - **ghostfolio**: [Ghostfolio](https://ghostfol.io), portfolio and net
   worth tracking.
 - **ghostbudget**: syncs Actual Budget account balances into Ghostfolio

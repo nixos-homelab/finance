@@ -1,0 +1,14 @@
+{
+  "name": "actualbudget-bank-sync",
+  "version": "1.0.0",
+  "description": "Runs the bank sync of Actual Budget for every linked account",
+  "private": true,
+  "main": "bank-sync.js",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@actual-app/api": "~26.11.0"
+  }
+}

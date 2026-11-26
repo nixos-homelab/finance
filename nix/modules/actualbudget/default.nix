@@ -14,6 +14,7 @@ in
     enable = lib.mkEnableOption "Actual Budget";
   };
   imports = self.lib.importsApply [
+    ./bank-sync
     ./grafana.nix
     ./homepage.nix
     ./logs.nix
