@@ -40,7 +40,9 @@ Two CronJobs in Ghostfolio's namespace, both on the PersistentVolumeClaim
 - Deposits and withdrawals: no activity; the cash balance covers them.
 - Instruments by ISIN: `symbols` maps the ones Ghostfolio already holds under a
   symbol of its own, the rest go to the import as the ISIN, which Ghostfolio
-  resolves through its data provider.
+  resolves through its data provider. Once an instrument has `saxo:`
+  activities, its later ones (and the position check) use the symbol
+  Ghostfolio resolved it to.
 - Reversed trades: the activity of the original trade is deleted.
 - Options, splits, exchange offers and other corporate actions stop the run:
   map them, or list them in `ignore`.

@@ -142,6 +142,19 @@ func Sync(ctx context.Context, auth *Auth, opts SyncOptions) error {
 		positions          []position
 	}
 	var holdings []held
+	// The configured symbols, and those Ghostfolio resolved an ISIN to in an earlier import: the symbol its saxo:
+	// activities of that instrument have. New activities go in under it too, so an instrument stays one holding
+	symbols := map[string]Target{}
+	for isin, t := range cfg.Symbols {
+		symbols[isin] = t
+	}
+	learn := func(accountID, comment, isin string) {
+		if a, ok := have[accountID+"|"+comment]; ok && isin != "" {
+			if _, known := symbols[isin]; !known {
+				symbols[isin] = Target{Symbol: a.AssetProfile.Symbol, DataSource: a.AssetProfile.DataSource}
+			}
+		}
+	}
 
 	for _, acc := range cfg.Accounts {
 		var sa *struct{ AccountId, AccountKey, Currency string }
@@ -168,7 +181,16 @@ func Sync(ctx context.Context, auth *Auth, opts SyncOptions) error {
 		if err != nil {
 			return err
 		}
-		m := &Mapper{Symbols: cfg.Symbols, AccountID: ga.ID, Profiles: profiles}
+		for _, tx := range txs {
+			learn(ga.ID, "saxo:trade:"+tx.TradeId, tx.Instrument.ISINCode)
+			learn(ga.ID, "saxo:ca:"+tx.CorporateActionId, tx.Instrument.ISINCode)
+			for _, t := range tx.Trades {
+				if t.Instrument != nil {
+					learn(ga.ID, "saxo:ca:"+tx.CorporateActionId+":"+t.Instrument.ISINCode, t.Instrument.ISINCode)
+				}
+			}
+		}
+		m := &Mapper{Symbols: symbols, AccountID: ga.ID, Profiles: profiles}
 		added := 0
 		for _, tx := range txs {
 			if tx.Instrument.ISINCode != "" {
@@ -252,7 +274,7 @@ func Sync(ctx context.Context, auth *Auth, opts SyncOptions) error {
 		add(a.AccountID, a.Symbol, a.Type, a.Quantity)
 	}
 	symbolOf := func(isin string) string {
-		if t, ok := cfg.Symbols[isin]; ok {
+		if t, ok := symbols[isin]; ok {
 			return t.Symbol
 		}
 		return isin
