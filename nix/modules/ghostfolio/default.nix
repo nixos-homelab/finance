@@ -52,6 +52,8 @@ in
         namespace = "ghostfolio";
         name = "ghostfolio-token";
         field = "GHOSTFOLIO_TOKEN";
+        # Typed in from Ghostfolio's settings on a real machine
+        test = "echo test-ghostfolio-token";
       };
       sources.GHOSTFOLIO_ACCESS_TOKEN_SALT = secretSource "Ghostfolio Access Token Salt" "ACCESS_TOKEN_SALT";
       sources.GHOSTFOLIO_JWT_SECRET_KEY = secretSource "Ghostfolio JWT Secret Key" "JWT_SECRET_KEY";
